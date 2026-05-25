@@ -1,40 +1,44 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Jugadores – KA ESPORTS</title>
+  <title>Players – KA ESPORTS</title>
   <link rel="stylesheet" href="../css/style.css">
 </head>
 <body>
   <div class="wrap">
     <header class="hero">
       <div class="eyebrow">KA ESPORTS</div>
-      <h1>Jugadores</h1>
-      <p>Lista completa de jugadores registrados en el sistema.</p>
+      <h1>Players</h1>
+      <p>Complete list of registered players.</p>
     </header>
     <div class="grid">
       <div id="sidebar-container"></div>
       <main class="content">
         <section class="panel">
-          <div class="section-heading">Todos los Jugadores</div>
-          <div class="updates-box">
-            <table id="data-table">
-              <thead></thead>
-              <tbody><tr><td colspan="10">Cargando...</td></tr></tbody>
-            </table>
-          </div>
+          <div class="section-heading">All Players</div>
+          <table id="data-table" class="data-table">
+            <thead></thead>
+            <tbody><tr><td colspan="20">Loading…</td></tr></tbody>
+          </table>
         </section>
       </main>
     </div>
   </div>
   <script src="../js/api-loader.js"></script>
   <script>
-    document.addEventListener('DOMContentLoaded', () => loadDataIntoTable('PLAYERS', 'data-table'));
+    document.addEventListener('DOMContentLoaded', () => {
+      loadDataIntoTable('PLAYERS', 'data-table', -1); // No rank column for players sheet
+    });
   </script>
   <script>
     fetch("../sidebar.html").then(r => r.text()).then(html => {
       document.getElementById("sidebar-container").innerHTML = html;
+    });
+  </script>
+</body>
+</html>
     });
   </script>
 </body>
