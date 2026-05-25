@@ -1,36 +1,36 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sanciones – KA ESPORTS</title>
+  <title>Penalties – KA ESPORTS</title>
   <link rel="stylesheet" href="../css/style.css">
 </head>
 <body>
   <div class="wrap">
     <header class="hero">
       <div class="eyebrow">KA ESPORTS</div>
-      <h1>Penalizaciones y Sanciones</h1>
-      <p>Registro de rage quits y suspensiones.</p>
+      <h1>Penalties & Sanctions</h1>
+      <p>Rage quit and suspension records.</p>
     </header>
     <div class="grid">
       <div id="sidebar-container"></div>
       <main class="content">
         <section class="panel">
-          <div class="section-heading">Historial de Penalizaciones</div>
-          <div class="updates-box">
-            <table id="data-table">
-              <thead></thead>
-              <tbody><tr><td colspan="10">Cargando...</td></tr></tbody>
-            </table>
-          </div>
+          <div class="section-heading">Penalty History</div>
+          <table id="data-table" class="data-table">
+            <thead></thead>
+            <tbody><tr><td colspan="20">Loading…</td></tr></tbody>
+          </table>
         </section>
       </main>
     </div>
   </div>
   <script src="../js/api-loader.js"></script>
   <script>
-    document.addEventListener('DOMContentLoaded', () => loadDataIntoTable('PENALTIES', 'data-table'));
+    document.addEventListener('DOMContentLoaded', () => {
+      loadDataIntoTable('PENALTIES', 'data-table', -1);
+    });
   </script>
   <script>
     fetch("../sidebar.html").then(r => r.text()).then(html => {
