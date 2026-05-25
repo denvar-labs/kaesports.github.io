@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KA ESPORTS - Mario Kart 64 Competitive Hub</title>
+  <meta name="description" content="KA ESPORTS es el centro competitivo de Mario Kart 64. Rankings Glicko-2, torneos, historial de partidas y comunidad.">
+  <link rel="canonical" href="https://denvar-labs.github.io/">
+  <meta property="og:title" content="KA ESPORTS - Mario Kart 64">
+  <meta property="og:description" content="Rankings, torneos y comunidad de Mario Kart 64.">
+  <meta property="og:url" content="https://denvar-labs.github.io/">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="wrap">
+    <header class="hero">
+      <div class="eyebrow">KA ESPORTS</div>
+      <h1>KA ESPORTS</h1>
+      <p>El hogar del competitivo de Mario Kart 64. Rankings, torneos, comunidad y mucho más.</p>
+    </header>
+
+    <div class="grid">
+      <div id="sidebar-container"></div>
+
+      <main class="content">
+        <section class="panel">
+          <div class="section-heading">Top 5 del Leaderboard Global</div>
+          <div class="updates-box">
+            <table id="top5-table">
+              <thead>
+                <tr><th>#</th><th>Jugador</th><th>Rating</th><th>Rango</th></tr>
+              </thead>
+              <tbody id="top5-body">
+                <tr><td colspan="4">Cargando...</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p><a href="pages/leaderboard.html">Ver leaderboard completo →</a></p>
+        </section>
+
+        <section class="panel">
+          <div class="section-heading">Secciones</div>
+          <div class="quick-links">
+            <a href="pages/leaderboard.html">🏆 Leaderboard Global</a>
+            <a href="pages/jugadores.html">👥 Jugadores</a>
+            <a href="pages/partidas.html">🎮 Partidas</a>
+            <a href="pages/sanciones.html">⚠️ Sanciones</a>
+            <a href="pages/torneos.html">📅 Torneos</a>
+            <a href="pages/comunidad.html">💬 Comunidad</a>
+          </div>
+        </section>
+
+        <footer>
+          © 2026 KA ESPORTS – Comunidad de Mario Kart 64
+        </footer>
+      </main>
+    </div>
+  </div>
+
+  <script src="js/api-loader.js"></script>
+  <script>
+    (async function() {
+      const tbody = document.getElementById('top5-body');
+      try {
+        const API_BASE = 'https://script.google.com/macros/s/AKfycbyVBjLSCxunlwsHt2Ou_grlUMUte5Z_J1t5tOICLkVknmMyIwz5HPmQxEO0yJRhuDLY/exec';
+        const res = await fetch(`${API_BASE}?sheet=LEADERBOARD_GLOBAL`);
+        const json = await res.json();
+        if (json.error) throw new Error(json.error);
+        const rows = json.data;
+        if (rows.length < 4) throw new Error('No data');
+        const top5 = rows.slice(3).slice(0, 5);
+        tbody.innerHTML = top5.map((row, i) => `
+          <tr>
+            <td>${i + 1}</td>
+            <td>${row[2] || ''}</td>
+            <td>${parseFloat(row[3]).toFixed(2)}</td>
+            <td>${row[5] || ''}</td>
+          </tr>
+        `).join('');
+      } catch (err) {
+        tbody.innerHTML = `<tr><td colspan="4">Error: ${err.message}</td></tr>`;
+      }
+    })();
+  </script>
+  <script>
+    fetch("sidebar.html")
+      .then(r => r.text())
+      .then(html => { document.getElementById("sidebar-container").innerHTML = html; });
+  </script>
+</body>
+</html>
