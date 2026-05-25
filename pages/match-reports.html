@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Match Reports – KA ESPORTS</title>
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+  <div class="wrap">
+    <header class="hero">
+      <div class="eyebrow">KA ESPORTS</div>
+      <h1>Match Reports</h1>
+      <p>Select a month to view detailed match reports.</p>
+    </header>
+    <div class="grid">
+      <div id="sidebar-container"></div>
+      <main class="content">
+        <section class="panel">
+          <div class="section-heading">
+            <label for="report-select">Month:</label>
+            <select id="report-select" style="margin-left:10px; padding:6px 10px; border-radius:4px; border:1px solid var(--border);">
+              <option value="">-- Choose a month --</option>
+            </select>
+          </div>
+          <table id="data-table" class="data-table">
+            <thead></thead>
+            <tbody><tr><td colspan="20">Select a month to view its match reports.</td></tr></tbody>
+          </table>
+        </section>
+      </main>
+    </div>
+  </div>
+  <script src="../js/api-loader.js"></script>
+  <script>
+    async function init() {
+      await populateMonthSelector('report-select', 'MATCH_REPORTS_');
+
+      document.getElementById('report-select').addEventListener('change', async (e) => {
+        const sheet = e.target.value;
+        if (!sheet) {
+          document.querySelector('#data-table tbody').innerHTML = '<tr><td colspan="20">Select a month to view its match reports.</td></tr>';
+          return;
+        }
+        // Match reports sheets have 2 header rows (skip = 2)
+        loadTableFromSheet(sheet, 'data-table', -1);
+      });
+    }
+
+    document.addEventListener('DOMContentLoaded', init);
+  </script>
+  <script>
+    fetch("../sidebar.html").then(r => r.text()).then(html => {
+      document.getElementById("sidebar-container").innerHTML = html;
+    });
+  </script>
+</body>
+</html>
