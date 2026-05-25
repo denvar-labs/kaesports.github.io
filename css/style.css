@@ -1,33 +1,28 @@
-/* ===== KA ESPORTS – Modern Dark Theme ===== */
+/* ===== KA ESPORTS – Google Sheets Inspired Light Theme ===== */
 
 :root {
-  --bg: #0b0f17;
-  --surface: #131925;
-  --surface-light: #1c2333;
-  --border: #2a3344;
-  --text: #e4e7ec;
-  --text-muted: #8b93a5;
-  --accent: #3b82f6;
-  --accent-glow: #60a5fa;
-  --green: #10b981;
-  --yellow: #f59e0b;
-  --red: #ef4444;
+  --bg: #f5f7fa;
+  --surface: #ffffff;
+  --surface-alt: #f0f2f5;
+  --border: #dce1e8;
+  --border-light: #eef0f4;
+  --text: #1a1d23;
+  --text-muted: #5f6b7a;
+  --accent: #4a86e8;
+  --accent-dark: #3b6fd4;
   --rank-gm: #f1c232;
-  --rank-master: #f59e0b;
-  --rank-pro: #3b82f6;
-  --rank-expert: #ef4444;
-  --rank-advanced: #f59e0b;
-  --rank-amateur: #10b981;
-  --rank-padawan: #8b93a5;
+  --rank-master: #FFD966;
+  --rank-pro: #CCE5FF;
+  --rank-expert: #FF5C5C;
+  --rank-advanced: #FFF38A;
+  --rank-amateur: #9AFF7D;
+  --rank-padawan: #C7C1C1;
   --max-width: 1200px;
   --radius: 8px;
+  --shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
 }
 
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
+* { margin: 0; padding: 0; box-sizing: border-box; }
 
 body {
   font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
@@ -38,55 +33,51 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-a {
-  color: var(--accent);
-  text-decoration: none;
-}
-a:hover {
-  color: var(--accent-glow);
-}
+a { color: var(--accent); text-decoration: none; }
+a:hover { color: var(--accent-dark); text-decoration: underline; }
 
 .wrap {
   max-width: var(--max-width);
   margin: 0 auto;
-  padding: 24px 16px 40px;
+  padding: 20px 16px 40px;
 }
 
 /* ===== Header ===== */
 .hero {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 24px;
+  background: var(--accent);
+  color: #fff;
+  padding: 28px 32px;
   margin-bottom: 24px;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
 }
 
 .eyebrow {
   display: inline-block;
-  background: var(--accent);
+  background: rgba(255,255,255,0.15);
   color: #fff;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.8px;
   padding: 4px 10px;
   border-radius: 4px;
   margin-bottom: 12px;
 }
 
 h1 {
-  font-size: 2.2rem;
+  font-size: 2rem;
   font-weight: 800;
   color: #fff;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
 }
 
 .hero p {
-  color: var(--text-muted);
-  font-size: 1rem;
+  color: rgba(255,255,255,0.85);
+  font-size: 0.95rem;
 }
 
-/* ===== Grid layout ===== */
+/* ===== Grid ===== */
 .grid {
   display: grid;
   grid-template-columns: 260px 1fr;
@@ -95,10 +86,7 @@ h1 {
 }
 
 /* ===== Sidebar ===== */
-.sidebar {
-  position: sticky;
-  top: 24px;
-}
+.sidebar { position: sticky; top: 24px; }
 
 .panel {
   background: var(--surface);
@@ -106,96 +94,107 @@ h1 {
   border-radius: var(--radius);
   padding: 20px;
   margin-bottom: 20px;
+  box-shadow: var(--shadow);
 }
 
 .panel-heading {
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.4px;
+  letter-spacing: 0.5px;
   color: var(--text-muted);
   margin-bottom: 12px;
-  border-bottom: 1px solid var(--border);
   padding-bottom: 8px;
+  border-bottom: 1px solid var(--border);
 }
 
-/* ===== Quick links ===== */
+/* ===== Quick Links ===== */
 .quick-links {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 2px;
 }
 
 .quick-links a {
   display: block;
-  padding: 10px 12px;
-  background: var(--surface-light);
+  padding: 9px 12px;
+  background: var(--surface-alt);
   border-radius: 6px;
   font-size: 14px;
   font-weight: 500;
-  transition: background 0.2s;
+  color: var(--text);
+  transition: all 0.2s;
 }
 
 .quick-links a:hover {
   background: var(--accent);
   color: #fff;
+  text-decoration: none;
 }
 
-/* ===== Section heading inside main ===== */
+/* ===== Section Heading ===== */
 .section-heading {
   font-size: 18px;
   font-weight: 700;
   margin-bottom: 16px;
-  color: #fff;
-  display: flex;
-  align-items: center;
-  gap: 8px;
+  color: var(--text);
 }
 
-/* ===== Tables ===== */
+/* ===== Data Table ===== */
 .data-table {
   width: 100%;
   border-collapse: collapse;
-  background: var(--surface-light);
+  background: var(--surface);
   border-radius: var(--radius);
   overflow: hidden;
+  border: 1px solid var(--border);
 }
 
 .data-table th {
-  background: var(--surface);
-  color: var(--text-muted);
+  background: var(--accent);
+  color: #fff;
   font-size: 13px;
   font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.3px;
+  letter-spacing: 0.4px;
   padding: 12px 16px;
   text-align: left;
-  border-bottom: 1px solid var(--border);
+  border-bottom: 2px solid var(--accent-dark);
 }
 
 .data-table td {
   padding: 10px 16px;
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid var(--border-light);
   font-size: 14px;
   white-space: nowrap;
 }
 
-.data-table tr:last-child td {
-  border-bottom: none;
-}
+.data-table tr:last-child td { border-bottom: none; }
 
 .data-table tbody tr:hover {
-  background: rgba(59, 130, 246, 0.08);
+  background: #f0f4ff;
 }
 
-/* Rank background classes */
-tr.rank-grand-master td:first-child { border-left: 3px solid var(--rank-gm); }
-tr.rank-master td:first-child { border-left: 3px solid var(--rank-master); }
-tr.rank-pro td:first-child { border-left: 3px solid var(--rank-pro); }
-tr.rank-expert td:first-child { border-left: 3px solid var(--rank-expert); }
-tr.rank-advanced td:first-child { border-left: 3px solid var(--rank-advanced); }
-tr.rank-amateur td:first-child { border-left: 3px solid var(--rank-amateur); }
-tr.rank-padawan td:first-child { border-left: 3px solid var(--rank-padawan); }
+/* Rank-specific row background colors */
+tr.rank-grand-master td { background-color: var(--rank-gm); }
+tr.rank-master td { background-color: var(--rank-master); }
+tr.rank-pro td { background-color: var(--rank-pro); }
+tr.rank-expert td { background-color: var(--rank-expert); }
+tr.rank-advanced td { background-color: var(--rank-advanced); }
+tr.rank-amateur td { background-color: var(--rank-amateur); }
+tr.rank-padawan td { background-color: var(--rank-padawan); }
+
+/* Override rank background on hover */
+.data-table tbody tr:hover td { background-color: #f0f4ff !important; }
+
+/* Rank left border accent (subtle) */
+tr.rank-grand-master td:first-child { border-left: 3px solid #d4a017; }
+tr.rank-master td:first-child { border-left: 3px solid #e6a800; }
+tr.rank-pro td:first-child { border-left: 3px solid #5b9bd5; }
+tr.rank-expert td:first-child { border-left: 3px solid #d63434; }
+tr.rank-advanced td:first-child { border-left: 3px solid #e6d740; }
+tr.rank-amateur td:first-child { border-left: 3px solid #5fbf5f; }
+tr.rank-padawan td:first-child { border-left: 3px solid #9b9b9b; }
 
 /* ===== Footer ===== */
 .site-footer {
@@ -209,13 +208,8 @@ tr.rank-padawan td:first-child { border-left: 3px solid var(--rank-padawan); }
 
 /* ===== Mobile ===== */
 @media (max-width: 768px) {
-  .grid {
-    grid-template-columns: 1fr;
-  }
-  .sidebar {
-    position: static;
-  }
-  h1 {
-    font-size: 1.8rem;
-  }
+  .grid { grid-template-columns: 1fr; }
+  .sidebar { position: static; }
+  h1 { font-size: 1.6rem; }
+  .data-table td, .data-table th { padding: 8px 10px; font-size: 13px; }
 }
