@@ -3,20 +3,20 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>KA ESPORTS – Mario Kart 64 Competitive Hub</title>
-  <meta name="description" content="KA ESPORTS is the competitive center for Mario Kart 64. Glicko-2 rankings, tournaments, match history and community.">
+  <title>Denvar Labs – Gaming Projects</title>
+  <meta name="description" content="Home of KA ESPORTS and other gaming projects.">
   <link rel="canonical" href="https://denvar-labs.github.io/">
-  <meta property="og:title" content="KA ESPORTS – Mario Kart 64">
-  <meta property="og:description" content="Rankings, tournaments and Mario Kart 64 community.">
+  <meta property="og:title" content="Denvar Labs">
+  <meta property="og:description" content="Competitive gaming projects.">
   <meta property="og:url" content="https://denvar-labs.github.io/">
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
   <div class="wrap">
     <header class="hero">
-      <div class="eyebrow">KA ESPORTS</div>
-      <h1>KA ESPORTS</h1>
-      <p>The home of competitive Mario Kart 64. Rankings, tournaments, community and more.</p>
+      <div class="eyebrow">DENVAR LABS</div>
+      <h1>Welcome to Denvar Labs</h1>
+      <p>Home of competitive gaming projects, rankings, and community tools.</p>
     </header>
 
     <div class="grid">
@@ -24,64 +24,23 @@
 
       <main class="content">
         <section class="panel">
-          <div class="section-heading">🏆 Top 5 Global Leaderboard</div>
-          <table id="top5-table" class="data-table">
-            <thead>
-              <tr><th>#</th><th>Player</th><th>Rating</th><th>Rank</th></tr>
-            </thead>
-            <tbody id="top5-body">
-              <tr><td colspan="4">Loading…</td></tr>
-            </tbody>
-          </table>
-          <p style="margin-top:16px"><a href="pages/leaderboard.html">View full leaderboard →</a></p>
-        </section>
-
-        <section class="panel">
-          <div class="section-heading">📂 Sections</div>
+          <div class="section-heading">🚀 Projects</div>
           <div class="quick-links">
-            <a href="pages/leaderboard.html">🏆 Global Leaderboard</a>
-            <a href="pages/jugadores.html">👥 Players</a>
-            <a href="pages/partidas.html">🎮 Matches</a>
-            <a href="pages/sanciones.html">⚠️ Penalties</a>
-            <a href="pages/torneos.html">📅 Tournaments</a>
-            <a href="pages/comunidad.html">💬 Community</a>
+            <a href="pages/ka-esports.html">
+              <strong>🏆 KA ESPORTS</strong><br>
+              <small>Mario Kart 64 competitive rankings, tournaments, and community.</small>
+            </a>
+            <a href="#">
+              <strong>🛠️ MK64 Modified ROM (Coming Soon)</strong><br>
+              <small>A custom Mario Kart 64 experience.</small>
+            </a>
           </div>
         </section>
       </main>
     </div>
-    <footer class="site-footer">© 2026 KA ESPORTS – Mario Kart 64 Community</footer>
+    <footer class="site-footer">© 2026 Denvar Labs</footer>
   </div>
 
-  <script src="js/api-loader.js"></script>
-  <script>
-    (async function() {
-      const tbody = document.getElementById('top5-body');
-      try {
-        const url = `${API_BASE}?sheet=LEADERBOARD_GLOBAL`;
-        const res = await fetch(url);
-        const json = await res.json();
-        if (json.error) throw new Error(json.error);
-        const rows = json.data;
-        if (rows.length < 4) throw new Error('Not enough data');
-
-        const top5 = rows.slice(3).slice(0, 5);
-        tbody.innerHTML = top5.map((row, i) => {
-          const rank = row[5] || '';
-          const cls = RANK_CLASS_MAP[rank.trim()] || '';
-          return `
-            <tr class="${cls}">
-              <td>${i + 1}</td>
-              <td>${row[2] || ''}</td>
-              <td>${parseFloat(row[3]).toFixed(2)}</td>
-              <td>${rank}</td>
-            </tr>
-          `;
-        }).join('');
-      } catch (err) {
-        tbody.innerHTML = `<tr><td colspan="4">Error: ${err.message}</td></tr>`;
-      }
-    })();
-  </script>
   <script>
     fetch("sidebar.html")
       .then(r => r.text())
