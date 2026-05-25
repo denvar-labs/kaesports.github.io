@@ -1,36 +1,36 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Leaderboard Global – KA ESPORTS</title>
+  <title>Global Leaderboard – KA ESPORTS</title>
   <link rel="stylesheet" href="../css/style.css">
 </head>
 <body>
   <div class="wrap">
     <header class="hero">
       <div class="eyebrow">KA ESPORTS</div>
-      <h1>Leaderboard Global</h1>
-      <p>Clasificación general basada en el sistema Glicko-2.</p>
+      <h1>Global Leaderboard</h1>
+      <p>Overall ranking based on the Glicko-2 system.</p>
     </header>
     <div class="grid">
       <div id="sidebar-container"></div>
       <main class="content">
         <section class="panel">
-          <div class="section-heading">Todos los jugadores</div>
-          <div class="updates-box">
-            <table id="data-table">
-              <thead></thead>
-              <tbody><tr><td colspan="10">Cargando...</td></tr></tbody>
-            </table>
-          </div>
+          <div class="section-heading">All Players</div>
+          <table id="data-table" class="data-table">
+            <thead></thead>
+            <tbody><tr><td colspan="20">Loading…</td></tr></tbody>
+          </table>
         </section>
       </main>
     </div>
   </div>
   <script src="../js/api-loader.js"></script>
   <script>
-    document.addEventListener('DOMContentLoaded', () => loadDataIntoTable('LEADERBOARD_GLOBAL', 'data-table'));
+    document.addEventListener('DOMContentLoaded', () => {
+      loadDataIntoTable('LEADERBOARD_GLOBAL', 'data-table');
+    });
   </script>
   <script>
     fetch("../sidebar.html").then(r => r.text()).then(html => {
