@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Monthly Leaderboard – KA ESPORTS</title>
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+  <div class="wrap">
+    <header class="hero">
+      <div class="eyebrow">KA ESPORTS</div>
+      <h1>Monthly Leaderboard</h1>
+      <p>Select a season to view its leaderboard.</p>
+    </header>
+    <div class="grid">
+      <div id="sidebar-container"></div>
+      <main class="content">
+        <section class="panel">
+          <div class="section-heading">
+            <label for="month-select">Season:</label>
+            <select id="month-select" style="margin-left:10px; padding:6px 10px; border-radius:4px; border:1px solid var(--border);">
+              <option value="">-- Choose a month --</option>
+            </select>
+          </div>
+          <table id="data-table" class="data-table">
+            <thead></thead>
+            <tbody><tr><td colspan="20">Select a month to view its leaderboard.</td></tr></tbody>
+          </table>
+        </section>
+      </main>
+    </div>
+  </div>
+  <script src="../js/api-loader.js"></script>
+  <script>
+    async function init() {
+      await populateMonthSelector('month-select', 'LEADERBOARD_');
+
+      document.getElementById('month-select').addEventListener('change', async (e) => {
+        const sheet = e.target.value;
+        if (!sheet) {
+          document.querySelector('#data-table tbody').innerHTML = '<tr><td colspan="20">Select a month to view its leaderboard.</td></tr>';
+          return;
+        }
+        loadTableFromSheet(sheet, 'data-table');
+      });
+    }
+
+    document.addEventListener('DOMContentLoaded', init);
+  </script>
+  <script>
+    fetch("../sidebar.html").then(r => r.text()).then(html => {
+      document.getElementById("sidebar-container").innerHTML = html;
+    });
+  </script>
+</body>
+</html>
