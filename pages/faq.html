@@ -5,32 +5,287 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>FAQ – KA ESPORTS</title>
   <link rel="stylesheet" href="../css/style.css">
+  <style>
+    /* FAQ-specific styles */
+    .faq-section {
+      margin-bottom: 28px;
+    }
+    .faq-section h2 {
+      font-size: 1.4rem;
+      margin: 20px 0 10px;
+      color: var(--accent-dark, #3b6fd4);
+      border-bottom: 2px solid var(--accent, #4a86e8);
+      padding-bottom: 6px;
+    }
+    .faq-section h3 {
+      font-size: 1.1rem;
+      margin: 16px 0 8px;
+      color: var(--text);
+    }
+    .faq-section p {
+      margin: 8px 0;
+    }
+    .faq-section ul {
+      margin-left: 20px;
+      list-style-type: disc;
+    }
+    .faq-section table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 12px 0;
+      background: var(--surface);
+      border: 1px solid var(--border);
+    }
+    .faq-section th {
+      background: var(--accent);
+      color: #fff;
+      padding: 8px 12px;
+      text-align: left;
+      font-weight: 600;
+    }
+    .faq-section td {
+      padding: 8px 12px;
+      border-bottom: 1px solid var(--border);
+    }
+    .faq-section tr:last-child td {
+      border-bottom: none;
+    }
+    .faq-section .definition {
+      margin: 6px 0;
+      padding-left: 20px;
+    }
+    .faq-section .definition dt {
+      font-weight: bold;
+      margin-top: 10px;
+    }
+    .faq-section .definition dd {
+      margin-left: 0;
+      color: var(--text-muted);
+    }
+  </style>
 </head>
 <body>
   <div class="wrap">
     <header class="hero">
       <div class="eyebrow">KA ESPORTS</div>
       <h1>Frequently Asked Questions</h1>
-      <p>Everything you need to know about the ranking system.</p>
+      <p>Everything you need to know about the Glicko-2 ranking system for Mario Kart 64.</p>
     </header>
+
     <div class="grid">
       <div id="sidebar-container"></div>
+
       <main class="content">
         <section class="panel">
-          <div class="section-heading">FAQ</div>
-          <div id="faq-content" style="line-height:1.8; font-size:15px;">
-            Loading…
+          <div class="section-heading">📊 KA ESPORTS – PROFESSIONAL GLICKO-2 RANKING SYSTEM FOR MARIO KART 64</div>
+
+          <!-- Section 1: What is Glicko-2 -->
+          <div class="faq-section">
+            <h2>🧠 What is Glicko‑2 and why do we use it?</h2>
+            <p>Glicko‑2 is a ranking system developed by Professor Mark Glickman as an improvement over the traditional Elo system. Unlike simple point systems, Glicko‑2 considers three factors for each player:</p>
+            <table>
+              <tr><th>Rating (R)</th><td>Represents the player's estimated skill</td><td>100 – 3500</td></tr>
+              <tr><th>Rating Deviation (RD)</th><td>Measures the uncertainty about the rating. More games = lower RD = more accurate rating</td><td>30 – 350</td></tr>
+              <tr><th>Volatility (σ)</th><td>Indicates performance consistency. Low values = stable results; high values = unpredictable player</td><td>0.02 – 0.2</td></tr>
+            </table>
+            <p><strong>Advantages over traditional systems:</strong></p>
+            <ul>
+              <li>✅ Quickly adjusts to the player's real skill level (thanks to RD)</li>
+              <li>✅ Fairly penalizes those who play against very different skill levels</li>
+              <li>✅ Detects and corrects performance inconsistencies (volatility)</li>
+              <li>✅ All history matters, but recent matches have more weight</li>
+            </ul>
           </div>
+
+          <!-- Section 2: System components -->
+          <div class="faq-section">
+            <h2>⚙️ System Components</h2>
+            <p>• <strong>Rating (R)</strong>: A number that indicates your level. The higher, the better.</p>
+            <p>• <strong>RD (Rating Deviation)</strong>: The lower, the more reliable your rating. After many matches, RD stabilizes at a low value (~30). If you stop playing, RD increases.</p>
+            <p>• <strong>Volatility (σ)</strong>: Measures your consistency. If you always finish in similar positions, volatility is low. If you alternate first and last places, volatility rises.</p>
+          </div>
+
+          <!-- Section 3: Why ALL matches ranked -->
+          <div class="faq-section">
+            <h2>🔥 Why are ALL matches ranked?</h2>
+            <p>At KA ESPORTS, every match you play affects your rating. There are no “friendly” or “practice” matches that don’t count. This is possible because Glicko‑2 automatically adjusts to all skill levels:</p>
+            <table>
+              <tr><th>Beginner</th><td>Your RD is high (350), so your first matches will have a moderate impact until the system fine‑tunes your real level.</td></tr>
+              <tr><th>Experienced player</th><td>Your RD is low (30‑100), so each match will accurately reflect small changes in your performance.</td></tr>
+              <tr><th>Playing against similarly skilled opponents</th><td>Point distribution is balanced and fair.</td></tr>
+              <tr><th>There’s an upset (beginner beats master)</th><td>The system recognizes that something unusual happened and adjusts ratings significantly, but controlled by volatility.</td></tr>
+            </table>
+            <p><strong>Advantages of this approach:</strong></p>
+            <ul>
+              <li>• Every match matters, encouraging constant participation.</li>
+              <li>• The system quickly adapts to your level, without needing separate categories.</li>
+              <li>• It’s impossible to “inflate” your rating by only playing against beginners, because gains will be minimal.</li>
+              <li>• The entire community competes in the same ranking, from novices to legends.</li>
+            </ul>
+          </div>
+
+          <!-- Section 4: Race scoring -->
+          <div class="faq-section">
+            <h2>🏁 Race Scoring</h2>
+            <p>Each 4‑player match distributes 96 total points as follows:</p>
+            <table>
+              <tr><th>Position</th><th>Race Points</th><th>Place Points (reference)</th></tr>
+              <tr><td>1st</td><td>12</td><td>🥇 12</td></tr>
+              <tr><td>2nd</td><td>8</td><td>🥈 8</td></tr>
+              <tr><td>3rd</td><td>4</td><td>🥉 4</td></tr>
+              <tr><td>4th</td><td>0</td><td>4️⃣ 0</td></tr>
+            </table>
+            <p>Important: Race points are not the rating. They are the input to the Glicko‑2 algorithm. The rating is calculated after each match by comparing:</p>
+            <p>• Your result (race points)<br>• Your opponents’ results<br>• The rating and RD of all players before the match</p>
+            <p>This means that finishing first is not enough: if you beat weak opponents, you’ll gain few points; if you finish last but against very strong opponents, you’ll lose few points.</p>
+          </div>
+
+          <!-- Section 5: Ranks and colors -->
+          <div class="faq-section">
+            <h2>🎨 Ranks and Colors</h2>
+            <p>Depending on your rating and number of matches played, you get a rank. The thresholds are:</p>
+            <table>
+              <tr><th>Rank</th><th>Minimum Rating</th><th>Color</th><th>Description</th></tr>
+              <tr><td>Grand Master</td><td>2000</td><td style="background:#f1c232">&nbsp;</td><td>The absolute elite</td></tr>
+              <tr><td>Master</td><td>1800</td><td style="background:#FFD966">&nbsp;</td><td>Top tier players</td></tr>
+              <tr><td>Pro</td><td>1600</td><td style="background:#CCE5FF">&nbsp;</td><td>Very solid and consistent</td></tr>
+              <tr><td>Expert</td><td>1400</td><td style="background:#FF5C5C">&nbsp;</td><td>Competitive players</td></tr>
+              <tr><td>Advanced</td><td>1200</td><td style="background:#FFF38A">&nbsp;</td><td>Experienced players</td></tr>
+              <tr><td>Amateur</td><td>1000</td><td style="background:#9AFF7D">&nbsp;</td><td>Competitive base</td></tr>
+              <tr><td>Padawan</td><td>0</td><td style="background:#C7C1C1">&nbsp;</td><td>Learning the way</td></tr>
+            </table>
+            <p><strong>Requirements to appear in rankings:</strong></p>
+            <table>
+              <tr><th>Ranking</th><th>Min. matches (any rank)</th><th>Min. matches for Master/GM</th><th>Activity required</th></tr>
+              <tr><td>Seasonal</td><td>5</td><td>10</td><td>During that month</td></tr>
+              <tr><td>Global</td><td>5</td><td>20</td><td>Last 30 days</td></tr>
+            </table>
+            <p>If you don’t meet the minimum, you’ll appear as <strong>Unranked</strong> until you reach the required matches.</p>
+          </div>
+
+          <!-- Section 6: Available statistics -->
+          <div class="faq-section">
+            <h2>📈 Available Statistics</h2>
+            <table>
+              <tr><th>Metric</th><th>Description</th><th>Formula / Detail</th></tr>
+              <tr><td>Win %</td><td>Percentage of wins (first places)</td><td>(Wins / Matches) × 100</td></tr>
+              <tr><td>Avg Race Pts</td><td>Average race points per match</td><td>Total points / Matches</td></tr>
+              <tr><td>Avg Position</td><td>Average finishing position</td><td>Sum of positions / Matches</td></tr>
+              <tr><td>Top 2 %</td><td>Percentage of top 2 finishes</td><td>(Top 2 / Matches) × 100</td></tr>
+              <tr><td>Confidence</td><td>Indicates how reliable your current rating is</td><td>1 – (RD / 350). Closer to 1 = more reliable</td></tr>
+              <tr><td>SOS</td><td>Average rating of opponents faced</td><td>Average of opponents’ pre‑match ratings</td></tr>
+              <tr><td>Performance</td><td>Combined index of win rate and rating</td><td>0.4 × WinRate + 0.6 × (Normalized rating)</td></tr>
+            </table>
+          </div>
+
+          <!-- Section 7: Leaderboards and reports -->
+          <div class="faq-section">
+            <h2>📊 Leaderboards and Reports</h2>
+            <p>• <strong>Seasonal leaderboard</strong>: Updated monthly. Only players with at least one match in that month appear. Ranks are determined by the matches played in that month.</p>
+            <p>• <strong>Global leaderboard</strong>: Includes all active players (last match within <code>ACTIVITY_WINDOW_DAYS</code>). Ranks are based on career totals, but with a higher match requirement for Master/Grand Master (<code>GLOBAL_MIN_MATCHES_FOR_HIGH_RANK</code>).</p>
+            <p>• <strong>Match reports</strong>: Detailed view of every processed match, with pre‑ and post‑ratings.</p>
+          </div>
+
+          <!-- Section 8: Inactivity decay -->
+          <div class="faq-section">
+            <h2>⏳ Inactivity System (Decay)</h2>
+            <p>If a player does not play for a certain period, their RD increases (more uncertainty). Additionally, if their rating is above the decay threshold, they lose a fixed number of points per inactivity period.</p>
+            <dl class="definition">
+              <dt>INACTIVITY_PERIOD_DAYS</dt><dd>7 days – after this, RD starts increasing.</dd>
+              <dt>RATING_DECAY_ENABLED</dt><dd>true</dd>
+              <dt>RATING_DECAY_THRESHOLD</dt><dd>1800 – only players above this rating suffer decay.</dd>
+              <dt>RATING_DECAY_AMOUNT</dt><dd>10 points lost per 14 days of inactivity.</dd>
+              <dt>RATING_DECAY_DAYS</dt><dd>14 – the period for rating decay.</dd>
+            </dl>
+          </div>
+
+          <!-- Section 9: Anti smurf and boosting -->
+          <div class="faq-section">
+            <h2>🛡️ Anti Smurf and Boosting Detection</h2>
+            <p>The system automatically logs suspicious activities:</p>
+            <ul>
+              <li>Excessive rating gain in a short period.</li>
+              <li>Very high win rate with few matches.</li>
+              <li>Low RD with very few matches (possible secondary account).</li>
+              <li>Consecutive matches with the same group of players (boosting).</li>
+            </ul>
+            <p>All alerts are stored in the <code>ANTI_SMURF_LOG</code> sheet for review.</p>
+          </div>
+
+          <!-- Section 10: Configuration variables -->
+          <div class="faq-section">
+            <h2>🔧 Configuration Variables Explained</h2>
+            <p>These values can be adjusted in the <code>00_Config.txt</code> file to fine‑tune the system:</p>
+            <table>
+              <tr><th>Variable</th><th>Default</th><th>Purpose</th></tr>
+              <tr><td>MIN_MATCHES_FOR_RANK</td><td>5</td><td>Minimum matches to appear with any rank (otherwise Unranked).</td></tr>
+              <tr><td>MIN_MATCHES_FOR_HIGH_RANK</td><td>10</td><td>Minimum matches in a season to be considered Master/Grand Master in that season.</td></tr>
+              <tr><td>GLOBAL_MIN_MATCHES_FOR_HIGH_RANK</td><td>20</td><td>Minimum career matches to be considered Master/Grand Master in the global leaderboard.</td></tr>
+              <tr><td>ACTIVITY_WINDOW_DAYS</td><td>30</td><td>Days since last match to remain on the global leaderboard.</td></tr>
+              <tr><td>INACTIVITY_PERIOD_DAYS</td><td>7</td><td>Days after which RD starts increasing.</td></tr>
+              <tr><td>RATING_DECAY_THRESHOLD</td><td>1800</td><td>Rating above which decay applies.</td></tr>
+              <tr><td>RATING_DECAY_AMOUNT</td><td>10</td><td>Points lost per decay period.</td></tr>
+              <tr><td>RATING_DECAY_DAYS</td><td>14</td><td>Number of days for one decay period.</td></tr>
+              <tr><td>TOTAL_MATCH_POINTS</td><td>96</td><td>Total race points per match.</td></tr>
+              <tr><td>MAX_PLAYER_POINTS</td><td>48</td><td>Maximum points a single player can get in a match.</td></tr>
+            </table>
+          </div>
+
+          <!-- Section 11: FAQ -->
+          <div class="faq-section">
+            <h2>❓ Frequently Asked Questions</h2>
+            <h3>Q: Why do I appear as Unranked even though my rating is high?</h3>
+            <p>A: You need to meet the minimum matches requirement. For seasonal, you need at least 5 matches in that month (or 10 if you are in Master/Grand Master). For global, you need at least 5 career matches (or 20 for Master/Grand Master) and have played in the last 30 days.</p>
+            <h3>Q: How is my rating calculated?</h3>
+            <p>A: Using the Glicko‑2 algorithm. It considers your result against each opponent, your RD, and your volatility. The formula is complex but ensures fair adjustments.</p>
+            <h3>Q: What is SOS?</h3>
+            <p>A: Strength of Schedule – the average rating of your opponents before each match. A high SOS means you face tough competition.</p>
+            <h3>Q: Can I lose points even if I finish first?</h3>
+            <p>A: Yes, if your opponents have much lower ratings than you, the expected outcome is a win, so you gain very little – sometimes even a slight loss if the system detects you underperformed relative to expectation.</p>
+            <h3>Q: How often are leaderboards updated?</h3>
+            <p>A: After every match, but the global and seasonal sheets are regenerated after each rebuild. You can manually refresh them via the menu.</p>
+          </div>
+
+          <!-- Section 12: Calculation example -->
+          <div class="faq-section">
+            <h2>📐 Step by Step Calculation Example</h2>
+            <p>(A detailed example would be provided here. Refer to the Glicko‑2 documentation for the full math.)</p>
+          </div>
+
+          <!-- Section 13: Acknowledgments -->
+          <div class="faq-section">
+            <h2>🙏 Acknowledgments</h2>
+            <p>Thanks to Professor Mark Glickman for developing the Glicko‑2 system. Special thanks to all KA ESPORTS players for their participation and feedback.</p>
+          </div>
+
+          <!-- Section 14: Contact -->
+          <div class="faq-section">
+            <h2>📬 Contact</h2>
+            <p>For issues or suggestions, contact the admin via the community Discord or Telegram.</p>
+          </div>
+
+          <!-- Final message -->
+          <div class="faq-section">
+            <h2>🚀 Let’s Compete!</h2>
+            <p>Now that you know the system, it’s time to enjoy fairer and more exciting matches. Remember:</p>
+            <ul>
+              <li>✅ Every match counts, regardless of your level or your opponents’.</li>
+              <li>✅ The system adapts to you, not the other way around.</li>
+              <li>✅ Transparency is total: all data is public.</li>
+              <li>✅ Play, improve, and climb the rankings.</li>
+            </ul>
+            <p>See you on the track! 🏎️💨</p>
+          </div>
+
+          <p style="text-align:center; margin-top:30px; color:var(--text-muted);">
+            Document v5.2 – KA ESPORTS – May 2026<br>
+            System based on Glicko‑2 | Custom implementation for Mario Kart 64
+          </p>
         </section>
       </main>
     </div>
   </div>
-  <script src="../js/api-loader.js"></script>
-  <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      loadPlainText('FAQ', 'faq-content');
-    });
-  </script>
+
   <script>
     fetch("../sidebar.html").then(r => r.text()).then(html => {
       document.getElementById("sidebar-container").innerHTML = html;
