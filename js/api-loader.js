@@ -1,5 +1,5 @@
 // =====================================================
-//  KA ESPORTS – API Data Loader (v8 – HTML entities fixed)
+//  KA ESPORTS – API Data Loader (v9 – Flexible header matching)
 // =====================================================
 
 const API_BASE = 'https://script.google.com/macros/s/AKfycbyVBjLSCxunlwsHt2Ou_grlUMUte5Z_J1t5tOICLkVknmMyIwz5HPmQxEO0yJRhuDLY/exec';
@@ -77,7 +77,10 @@ async function loadTableFromSheet(sheetName, tableId, rankColumnIndex = 5) {
 
     let headerRow = [];
     if (allRows.length >= skipRows && skipRows > 0) {
-      headerRow = allRows[skipRows - 1].map(h => (h || '').toString().trim());
+      // Limpiar caracteres invisibles y espacios
+      headerRow = allRows[skipRows - 1].map(h =>
+        (h || '').toString().replace(/[\u200B-\u200D\uFEFF]/g, '').trim()
+      );
     }
 
     thead.innerHTML = headerRow.length
@@ -103,9 +106,9 @@ async function loadTableFromSheet(sheetName, tableId, rankColumnIndex = 5) {
     let playerColIndex = -1, ratingBeforeColIndex = -1;
 
     if (isMatchReport) {
-      playerColIndex = headerRow.findIndex(h => h === 'Player');
-      ratingBeforeColIndex = headerRow.findIndex(h => h === 'Rating Before Match');
-      if (ratingBeforeColIndex === -1) ratingBeforeColIndex = headerRow.findIndex(h => h === 'Rating Before Matcl');
+      // Buscar de forma flexible (incluye variaciones como "Player " o "Player")
+      playerColIndex = headerRow.findIndex(h => h.includes('Player'));
+      ratingBeforeColIndex = headerRow.findIndex(h => h.includes('Rating Before'));
 
       console.log('📊 Match Report headers:', headerRow);
       console.log('   Player column index:', playerColIndex, '| Rating Before index:', ratingBeforeColIndex);
@@ -191,7 +194,7 @@ async function fetchPlayerNames() {
   try {
     const playersSheet = await fetchSheetData('PLAYERS');
     if (playersSheet.length < 2) return [];
-    const header = playersSheet[0].map(h => (h || '').toString().trim());
+    const header = playersSheet[0].map(h => (h || '').toString().replace(/[\u200B-\u200D\uFEFF]/g, '').trim());
     const nameCol = header.indexOf('Name');
     if (nameCol === -1) return [];
     const names = playersSheet.slice(1).map(row => row[nameCol]).filter(Boolean);
