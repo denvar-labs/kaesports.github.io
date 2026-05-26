@@ -184,7 +184,7 @@ tr.rank-advanced td { background-color: var(--rank-advanced); }
 tr.rank-amateur td { background-color: var(--rank-amateur); }
 tr.rank-padawan td { background-color: var(--rank-padawan); }
 
-/* Override rank background on hover */
+/* Override rank background on hover for leaderboard rows */
 .data-table tbody tr:hover td { background-color: #f0f4ff !important; }
 
 /* Rank left border accent (subtle) for leaderboards */
@@ -204,6 +204,11 @@ td.rank-expert       { background-color: #FF5C5C; }
 td.rank-advanced     { background-color: #FFF38A; }
 td.rank-amateur      { background-color: #9AFF7D; }
 td.rank-padawan      { background-color: #C7C1C1; }
+
+/* Prevent hover from removing rank color on individual cells */
+.data-table tbody td[class*="rank-"]:hover {
+  background-color: inherit !important;
+}
 
 /* ===== Footer ===== */
 .site-footer {
