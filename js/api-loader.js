@@ -1,5 +1,5 @@
 // =====================================================
-//  KA ESPORTS – API Data Loader (v6 – Trimmed headers + row skip fix)
+//  KA ESPORTS – API Data Loader (v7 – Espacios recortados + depuración)
 // =====================================================
 
 const API_BASE = 'https://script.google.com/macros/s/AKfycbyVBjLSCxunlwsHt2Ou_grlUMUte5Z_J1t5tOICLkVknmMyIwz5HPmQxEO0yJRhuDLY/exec';
@@ -70,19 +70,14 @@ async function loadTableFromSheet(sheetName, tableId, rankColumnIndex = 5) {
   try {
     const allRows = await fetchSheetData(sheetName);
 
-    // Determine how many rows to skip – match reports need 3
     let skipRows = HEADER_ROWS_TO_SKIP[sheetName];
     if (skipRows === undefined) {
-      if (sheetName.startsWith('MATCH_REPORTS_')) {
-        skipRows = 3;  // title, subtitle, real header
-      } else {
-        skipRows = DEFAULT_SKIP;
-      }
+      skipRows = sheetName.startsWith('MATCH_REPORTS_') ? 3 : DEFAULT_SKIP;
     }
 
+    // Header row: trim spaces from every cell
     let headerRow = [];
     if (allRows.length >= skipRows && skipRows > 0) {
-      // ★ TRIM header values to remove leading/trailing spaces
       headerRow = allRows[skipRows - 1].map(h => (h || '').toString().trim());
     }
 
@@ -90,10 +85,10 @@ async function loadTableFromSheet(sheetName, tableId, rankColumnIndex = 5) {
       ? '<tr>' + headerRow.map(h => `<th>${h}</th>`).join('') + '</tr>'
       : '';
 
-    // Filter out non-data rows (like separator rows)
+    // Data rows: skip separators and empty rows
     const dataRows = allRows.slice(skipRows).filter(row => {
       const firstCell = (row[0] || '').toString().trim();
-      return firstCell !== '---' && firstCell !== '';
+      return firstCell !== '---' && firstCell !== '' && firstCell !== 'undefined';
     });
 
     if (dataRows.length === 0) {
@@ -101,23 +96,24 @@ async function loadTableFromSheet(sheetName, tableId, rankColumnIndex = 5) {
       return;
     }
 
+    // Columns that contain '%' in header -> format as percentage
     const percentColumns = new Set();
     headerRow.forEach((h, idx) => {
       if (h.includes('%')) percentColumns.add(idx);
     });
 
     const isMatchReport = sheetName.startsWith('MATCH_REPORTS_');
-    let playerColIndex = -1;
-    let ratingBeforeColIndex = -1;
+    let playerColIndex = -1, ratingBeforeColIndex = -1;
+
     if (isMatchReport) {
-      // ★ Use trimmed comparison
+      // Find columns by trimmed name
       playerColIndex = headerRow.findIndex(h => h === 'Player');
       ratingBeforeColIndex = headerRow.findIndex(h => h === 'Rating Before Match');
+      // Fallback for possible misspelling
       if (ratingBeforeColIndex === -1) ratingBeforeColIndex = headerRow.findIndex(h => h === 'Rating Before Matcl');
 
-      // Debug info (can be removed later)
-      console.log('Match Report header:', headerRow);
-      console.log('Player column index:', playerColIndex, 'Rating Before index:', ratingBeforeColIndex);
+      console.log('📊 Match Report headers:', headerRow);
+      console.log('   Player column index:', playerColIndex, '| Rating Before index:', ratingBeforeColIndex);
     }
 
     tbody.innerHTML = dataRows.map(row => {
@@ -130,14 +126,14 @@ async function loadTableFromSheet(sheetName, tableId, rankColumnIndex = 5) {
       let rowHTML = `<tr class="${rowClass}">`;
       row.forEach((cell, colIdx) => {
         let display = cell ?? '';
+        // Format percentages
         if (percentColumns.has(colIdx) && typeof cell === 'number') {
           display = (cell * 100).toFixed(1) + '%';
-        } else if (typeof cell === 'number') {
-          if (!Number.isInteger(cell)) {
-            display = parseFloat(cell.toFixed(2));
-          }
+        } else if (typeof cell === 'number' && !Number.isInteger(cell)) {
+          display = parseFloat(cell.toFixed(2));
         }
 
+        // Apply rank color to Player cell in Match Reports
         let cellStyle = '';
         if (isMatchReport && colIdx === playerColIndex && ratingBeforeColIndex >= 0) {
           const ratingBefore = parseFloat(row[ratingBeforeColIndex]);
@@ -159,7 +155,7 @@ async function loadTableFromSheet(sheetName, tableId, rankColumnIndex = 5) {
   }
 }
 
-// --- Helper functions (unchanged) ---
+// ----- Helper functions (unchanged) -----
 async function fetchSheetList() {
   const url = `${API_BASE}?list=1`;
   const response = await fetch(url);
