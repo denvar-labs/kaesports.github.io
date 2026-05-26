@@ -140,7 +140,7 @@ h1 {
   color: var(--text);
 }
 
-/* ===== Data Table ===== */
+/* ===== Data Table (cabeceras azules como en FAQ) ===== */
 .data-table {
   width: 100%;
   border-collapse: collapse;
@@ -171,32 +171,30 @@ h1 {
 
 .data-table tr:last-child td { border-bottom: none; }
 
-.data-table tbody tr:hover {
-  background: #f0f4ff;
+/* Hover genérico: solo celdas que NO tengan clase de rango */
+.data-table tbody tr:hover td:not([class*="rank-"]) {
+  background-color: #f0f4ff;
 }
 
-/* Rank-specific row background colors (for leaderboards) */
+/* ===== Leaderboard: filas completas con color de rango ===== */
 tr.rank-grand-master td { background-color: var(--rank-gm); }
-tr.rank-master td { background-color: var(--rank-master); }
-tr.rank-pro td { background-color: var(--rank-pro); }
-tr.rank-expert td { background-color: var(--rank-expert); }
-tr.rank-advanced td { background-color: var(--rank-advanced); }
-tr.rank-amateur td { background-color: var(--rank-amateur); }
-tr.rank-padawan td { background-color: var(--rank-padawan); }
+tr.rank-master td       { background-color: var(--rank-master); }
+tr.rank-pro td          { background-color: var(--rank-pro); }
+tr.rank-expert td       { background-color: var(--rank-expert); }
+tr.rank-advanced td     { background-color: var(--rank-advanced); }
+tr.rank-amateur td      { background-color: var(--rank-amateur); }
+tr.rank-padawan td      { background-color: var(--rank-padawan); }
 
-/* Override rank background on hover for leaderboard rows */
-.data-table tbody tr:hover td { background-color: #f0f4ff !important; }
-
-/* Rank left border accent (subtle) for leaderboards */
+/* Borde izquierdo para leaderboards */
 tr.rank-grand-master td:first-child { border-left: 3px solid #d4a017; }
-tr.rank-master td:first-child { border-left: 3px solid #e6a800; }
-tr.rank-pro td:first-child { border-left: 3px solid #5b9bd5; }
-tr.rank-expert td:first-child { border-left: 3px solid #d63434; }
-tr.rank-advanced td:first-child { border-left: 3px solid #e6d740; }
-tr.rank-amateur td:first-child { border-left: 3px solid #5fbf5f; }
-tr.rank-padawan td:first-child { border-left: 3px solid #9b9b9b; }
+tr.rank-master td:first-child       { border-left: 3px solid #e6a800; }
+tr.rank-pro td:first-child          { border-left: 3px solid #5b9bd5; }
+tr.rank-expert td:first-child       { border-left: 3px solid #d63434; }
+tr.rank-advanced td:first-child     { border-left: 3px solid #e6d740; }
+tr.rank-amateur td:first-child      { border-left: 3px solid #5fbf5f; }
+tr.rank-padawan td:first-child      { border-left: 3px solid #9b9b9b; }
 
-/* ===== Match Reports: rank background on individual cells ===== */
+/* ===== Match Reports: celdas individuales con color de rango ===== */
 td.rank-grand-master { background-color: #f1c232; }
 td.rank-master       { background-color: #FFD966; }
 td.rank-pro          { background-color: #CCE5FF; }
@@ -204,11 +202,6 @@ td.rank-expert       { background-color: #FF5C5C; }
 td.rank-advanced     { background-color: #FFF38A; }
 td.rank-amateur      { background-color: #9AFF7D; }
 td.rank-padawan      { background-color: #C7C1C1; }
-
-/* Prevent hover from removing rank color on individual cells */
-.data-table tbody td[class*="rank-"]:hover {
-  background-color: inherit !important;
-}
 
 /* ===== Footer ===== */
 .site-footer {
