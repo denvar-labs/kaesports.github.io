@@ -1,5 +1,5 @@
 // =====================================================
-//  KA ESPORTS – API Data Loader (v5 – Fixed Match Report colors)
+//  KA ESPORTS – API Data Loader (v6 – Trimmed headers + row skip fix)
 // =====================================================
 
 const API_BASE = 'https://script.google.com/macros/s/AKfycbyVBjLSCxunlwsHt2Ou_grlUMUte5Z_J1t5tOICLkVknmMyIwz5HPmQxEO0yJRhuDLY/exec';
@@ -82,14 +82,20 @@ async function loadTableFromSheet(sheetName, tableId, rankColumnIndex = 5) {
 
     let headerRow = [];
     if (allRows.length >= skipRows && skipRows > 0) {
-      headerRow = allRows[skipRows - 1].map(h => h || '');
+      // ★ TRIM header values to remove leading/trailing spaces
+      headerRow = allRows[skipRows - 1].map(h => (h || '').toString().trim());
     }
 
     thead.innerHTML = headerRow.length
       ? '<tr>' + headerRow.map(h => `<th>${h}</th>`).join('') + '</tr>'
       : '';
 
-    const dataRows = allRows.slice(skipRows);
+    // Filter out non-data rows (like separator rows)
+    const dataRows = allRows.slice(skipRows).filter(row => {
+      const firstCell = (row[0] || '').toString().trim();
+      return firstCell !== '---' && firstCell !== '';
+    });
+
     if (dataRows.length === 0) {
       tbody.innerHTML = '<tr><td colspan="20">No data available.</td></tr>';
       return;
@@ -97,16 +103,21 @@ async function loadTableFromSheet(sheetName, tableId, rankColumnIndex = 5) {
 
     const percentColumns = new Set();
     headerRow.forEach((h, idx) => {
-      if (typeof h === 'string' && h.includes('%')) percentColumns.add(idx);
+      if (h.includes('%')) percentColumns.add(idx);
     });
 
     const isMatchReport = sheetName.startsWith('MATCH_REPORTS_');
     let playerColIndex = -1;
     let ratingBeforeColIndex = -1;
     if (isMatchReport) {
+      // ★ Use trimmed comparison
       playerColIndex = headerRow.findIndex(h => h === 'Player');
       ratingBeforeColIndex = headerRow.findIndex(h => h === 'Rating Before Match');
-      if (ratingBeforeColIndex === -1) ratingBeforeColIndex = headerRow.findIndex(h => h === 'Rating Before Matcl'); // possible typo
+      if (ratingBeforeColIndex === -1) ratingBeforeColIndex = headerRow.findIndex(h => h === 'Rating Before Matcl');
+
+      // Debug info (can be removed later)
+      console.log('Match Report header:', headerRow);
+      console.log('Player column index:', playerColIndex, 'Rating Before index:', ratingBeforeColIndex);
     }
 
     tbody.innerHTML = dataRows.map(row => {
@@ -148,7 +159,7 @@ async function loadTableFromSheet(sheetName, tableId, rankColumnIndex = 5) {
   }
 }
 
-// --- Rest of the functions (populateMonthSelector, fetchSheetList, etc.) unchanged ---
+// --- Helper functions (unchanged) ---
 async function fetchSheetList() {
   const url = `${API_BASE}?list=1`;
   const response = await fetch(url);
@@ -191,7 +202,7 @@ async function fetchPlayerNames() {
   try {
     const playersSheet = await fetchSheetData('PLAYERS');
     if (playersSheet.length < 2) return [];
-    const header = playersSheet[0];
+    const header = playersSheet[0].map(h => (h || '').toString().trim());
     const nameCol = header.indexOf('Name');
     if (nameCol === -1) return [];
     const names = playersSheet.slice(1).map(row => row[nameCol]).filter(Boolean);
