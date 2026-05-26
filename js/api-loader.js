@@ -1,16 +1,9 @@
 // =====================================================
-//  KA ESPORTS – API Data Loader (v4 – Match Report colors)
-//  - Detects MATCH_REPORTS_ sheets and colors the Player cell
-//    according to the "Rating Before Match" value.
-//  - Percentage formatting, rank colors, etc.
+//  KA ESPORTS – API Data Loader (v5 – Fixed Match Report colors)
 // =====================================================
 
 const API_BASE = 'https://script.google.com/macros/s/AKfycbyVBjLSCxunlwsHt2Ou_grlUMUte5Z_J1t5tOICLkVknmMyIwz5HPmQxEO0yJRhuDLY/exec';
 
-/**
- * Number of metadata rows to skip for each sheet type.
- * The last skipped row is used as the real column header.
- */
 const HEADER_ROWS_TO_SKIP = {
   'LEADERBOARD_GLOBAL': 3,
   'PLAYERS': 1,
@@ -38,15 +31,14 @@ const RANK_CLASS_MAP = {
   'Padawan': 'rank-padawan'
 };
 
-// Rating thresholds (same as in CONFIG)
 const RATING_THRESHOLDS = [
   { rank: 'Grand Master', min: 2000 },
-  { rank: 'Master', min: 1800 },
-  { rank: 'Pro', min: 1600 },
-  { rank: 'Expert', min: 1400 },
-  { rank: 'Advanced', min: 1200 },
-  { rank: 'Amateur', min: 1000 },
-  { rank: 'Padawan', min: 0 }
+  { rank: 'Master',       min: 1800 },
+  { rank: 'Pro',          min: 1600 },
+  { rank: 'Expert',       min: 1400 },
+  { rank: 'Advanced',     min: 1200 },
+  { rank: 'Amateur',      min: 1000 },
+  { rank: 'Padawan',      min: 0 }
 ];
 
 function getRankFromRating(rating) {
@@ -57,8 +49,6 @@ function getRankFromRating(rating) {
   return 'Padawan';
 }
 
-// ==================== CORE FETCH ====================
-
 async function fetchSheetData(sheetName) {
   const url = `${API_BASE}?sheet=${encodeURIComponent(sheetName)}`;
   const response = await fetch(url);
@@ -68,14 +58,6 @@ async function fetchSheetData(sheetName) {
   return json.data || [];
 }
 
-// ==================== TABLE RENDERER ====================
-
-/**
- * Load a sheet into an HTML table with smart formatting.
- * @param {string} sheetName
- * @param {string} tableId
- * @param {number} [rankColumnIndex=5] - column index for rank (0-based), -1 to disable
- */
 async function loadTableFromSheet(sheetName, tableId, rankColumnIndex = 5) {
   const table = document.getElementById(tableId);
   if (!table) return;
@@ -87,7 +69,16 @@ async function loadTableFromSheet(sheetName, tableId, rankColumnIndex = 5) {
 
   try {
     const allRows = await fetchSheetData(sheetName);
-    const skipRows = HEADER_ROWS_TO_SKIP[sheetName] ?? DEFAULT_SKIP;
+
+    // Determine how many rows to skip – match reports need 3
+    let skipRows = HEADER_ROWS_TO_SKIP[sheetName];
+    if (skipRows === undefined) {
+      if (sheetName.startsWith('MATCH_REPORTS_')) {
+        skipRows = 3;  // title, subtitle, real header
+      } else {
+        skipRows = DEFAULT_SKIP;
+      }
+    }
 
     let headerRow = [];
     if (allRows.length >= skipRows && skipRows > 0) {
@@ -104,25 +95,21 @@ async function loadTableFromSheet(sheetName, tableId, rankColumnIndex = 5) {
       return;
     }
 
-    // Identify percentage columns
     const percentColumns = new Set();
     headerRow.forEach((h, idx) => {
       if (typeof h === 'string' && h.includes('%')) percentColumns.add(idx);
     });
 
-    // Special handling for MATCH_REPORTS_ sheets: color the Player cell by "Rating Before Match"
     const isMatchReport = sheetName.startsWith('MATCH_REPORTS_');
     let playerColIndex = -1;
     let ratingBeforeColIndex = -1;
     if (isMatchReport) {
       playerColIndex = headerRow.findIndex(h => h === 'Player');
       ratingBeforeColIndex = headerRow.findIndex(h => h === 'Rating Before Match');
-      // fallback: sometimes the column might be "Rating Before Matcl" (typo in original data?)
-      if (ratingBeforeColIndex === -1) ratingBeforeColIndex = headerRow.findIndex(h => h === 'Rating Before Matcl');
+      if (ratingBeforeColIndex === -1) ratingBeforeColIndex = headerRow.findIndex(h => h === 'Rating Before Matcl'); // possible typo
     }
 
     tbody.innerHTML = dataRows.map(row => {
-      // Determine rank class for normal sheets (like leaderboards)
       let rowClass = '';
       if (!isMatchReport && rankColumnIndex >= 0) {
         const rankName = String(row[rankColumnIndex] || '').trim();
@@ -132,7 +119,6 @@ async function loadTableFromSheet(sheetName, tableId, rankColumnIndex = 5) {
       let rowHTML = `<tr class="${rowClass}">`;
       row.forEach((cell, colIdx) => {
         let display = cell ?? '';
-        // Format percentage columns
         if (percentColumns.has(colIdx) && typeof cell === 'number') {
           display = (cell * 100).toFixed(1) + '%';
         } else if (typeof cell === 'number') {
@@ -141,7 +127,6 @@ async function loadTableFromSheet(sheetName, tableId, rankColumnIndex = 5) {
           }
         }
 
-        // Apply rank color to Player cell in Match Reports
         let cellStyle = '';
         if (isMatchReport && colIdx === playerColIndex && ratingBeforeColIndex >= 0) {
           const ratingBefore = parseFloat(row[ratingBeforeColIndex]);
@@ -163,8 +148,7 @@ async function loadTableFromSheet(sheetName, tableId, rankColumnIndex = 5) {
   }
 }
 
-// ==================== SHEET LIST & DROPDOWNS ====================
-
+// --- Rest of the functions (populateMonthSelector, fetchSheetList, etc.) unchanged ---
 async function fetchSheetList() {
   const url = `${API_BASE}?list=1`;
   const response = await fetch(url);
@@ -177,10 +161,7 @@ async function populateMonthSelector(selectId, prefix) {
   if (!select) return;
   try {
     const allSheets = await fetchSheetList();
-    const filtered = allSheets
-      .filter(name => name.startsWith(prefix))
-      .sort()
-      .reverse();
+    const filtered = allSheets.filter(name => name.startsWith(prefix)).sort().reverse();
     select.innerHTML = '<option value="">-- Select a month --</option>';
     filtered.forEach(name => {
       const display = name.replace(prefix, '').replace(/_/g, '-');
@@ -191,7 +172,6 @@ async function populateMonthSelector(selectId, prefix) {
     });
   } catch (err) {
     console.error('Error populating month selector:', err);
-    select.innerHTML = '<option value="">Error loading months</option>';
   }
 }
 
@@ -207,8 +187,6 @@ function populateSelectFromList(selectId, items, defaultText = '-- Select --') {
   });
 }
 
-// ==================== PLAYER NAMES HELPER ====================
-
 async function fetchPlayerNames() {
   try {
     const playersSheet = await fetchSheetData('PLAYERS');
@@ -216,8 +194,7 @@ async function fetchPlayerNames() {
     const header = playersSheet[0];
     const nameCol = header.indexOf('Name');
     if (nameCol === -1) return [];
-    const dataRows = playersSheet.slice(1);
-    const names = dataRows.map(row => row[nameCol]).filter(Boolean);
+    const names = playersSheet.slice(1).map(row => row[nameCol]).filter(Boolean);
     return [...new Set(names)].sort();
   } catch (err) {
     console.error('Error fetching player names:', err);
@@ -225,18 +202,13 @@ async function fetchPlayerNames() {
   }
 }
 
-// ==================== PLAIN TEXT RENDERER ====================
-
 async function loadPlainText(sheetName, containerId) {
   const container = document.getElementById(containerId);
   if (!container) return;
   container.textContent = 'Loading…';
   try {
     const allRows = await fetchSheetData(sheetName);
-    if (!allRows.length) {
-      container.textContent = 'No content found.';
-      return;
-    }
+    if (!allRows.length) { container.textContent = 'No content found.'; return; }
     const lines = allRows.map(row => row[0] || '').filter(line => line.trim() !== '');
     container.innerHTML = lines.map(line => `<p>${line}</p>`).join('');
   } catch (err) {
