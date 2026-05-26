@@ -1,13 +1,15 @@
 // =====================================================
-//  KA ESPORTS – API Data Loader (Extended)
-//  Fetches sheet data from Google Apps Script and
-//  renders tables, dropdowns, and text content.
+//  KA ESPORTS – API Data Loader (Extended v2)
+//  - Percentage formatting
+//  - Always show table headers
+//  - Generic dropdown populator
 // =====================================================
 
 const API_BASE = 'https://script.google.com/macros/s/AKfycbyVBjLSCxunlwsHt2Ou_grlUMUte5Z_J1t5tOICLkVknmMyIwz5HPmQxEO0yJRhuDLY/exec';
 
 /**
- * Number of header rows to skip for each sheet type.
+ * Number of metadata rows to skip for each sheet type.
+ * The last skipped row is used as the real column header.
  */
 const HEADER_ROWS_TO_SKIP = {
   'LEADERBOARD_GLOBAL': 3,
@@ -19,16 +21,13 @@ const HEADER_ROWS_TO_SKIP = {
   'SYSTEM_METRICS': 2,
   'SEASONS_REPORT': 2,
   'MANUAL_MATCHES': 3,
-  'FAQ': 0,          // FAQ is not a table, we'll handle separately
-  'PLAYER_H2H_DETAILS': 1  // special sheet with merged headers
+  'FAQ': 0,
+  'PLAYER_H2H_DETAILS': 1,
+  '_H2H_DATA': 1
 };
 
-// Default number of rows to skip if not specified
 const DEFAULT_SKIP = 2;
 
-/**
- * Mapping from rank name to CSS class for coloring table rows.
- */
 const RANK_CLASS_MAP = {
   'Grand Master': 'rank-grand-master',
   'Master': 'rank-master',
@@ -41,11 +40,6 @@ const RANK_CLASS_MAP = {
 
 // ==================== CORE FETCH ====================
 
-/**
- * Fetch raw sheet data from the API.
- * @param {string} sheetName
- * @returns {Promise<Array>} raw rows
- */
 async function fetchSheetData(sheetName) {
   const url = `${API_BASE}?sheet=${encodeURIComponent(sheetName)}`;
   const response = await fetch(url);
@@ -58,10 +52,10 @@ async function fetchSheetData(sheetName) {
 // ==================== TABLE RENDERER ====================
 
 /**
- * Load a sheet into an HTML table, skipping metadata rows and applying rank colors.
+ * Load a sheet into an HTML table with smart formatting.
  * @param {string} sheetName
- * @param {string} tableId - ID of the <table> element
- * @param {number} [rankColumnIndex=5] - column index for rank (0-based)
+ * @param {string} tableId
+ * @param {number} [rankColumnIndex=5] - column index for rank (0-based), -1 to disable
  */
 async function loadTableFromSheet(sheetName, tableId, rankColumnIndex = 5) {
   const table = document.getElementById(tableId);
@@ -70,27 +64,54 @@ async function loadTableFromSheet(sheetName, tableId, rankColumnIndex = 5) {
   const tbody = table.querySelector('tbody');
   if (!thead || !tbody) return;
 
-  tbody.innerHTML = '<tr><td colspan="20">Loading data…</td></tr>';
+  tbody.innerHTML = '<tr><td colspan="20">Loading…</td></tr>';
 
   try {
     const allRows = await fetchSheetData(sheetName);
     const skipRows = HEADER_ROWS_TO_SKIP[sheetName] ?? DEFAULT_SKIP;
 
-    if (allRows.length <= skipRows) {
+    // Determine header row
+    let headerRow = [];
+    if (allRows.length >= skipRows && skipRows > 0) {
+      headerRow = allRows[skipRows - 1].map(h => h || '');
+    }
+
+    // Build table head (always show if we have headers)
+    thead.innerHTML = headerRow.length
+      ? '<tr>' + headerRow.map(h => `<th>${h}</th>`).join('') + '</tr>'
+      : '';
+
+    // Data rows start after skipRows
+    const dataRows = allRows.slice(skipRows);
+
+    if (dataRows.length === 0) {
       tbody.innerHTML = '<tr><td colspan="20">No data available.</td></tr>';
       return;
     }
 
-    const headerRow = allRows[skipRows - 1];  // last skipped row is the real header
-    const dataRows = allRows.slice(skipRows);
-
-    thead.innerHTML = '<tr>' + headerRow.map(h => `<th>${h || ''}</th>`).join('') + '</tr>';
+    // Identify columns that contain percentages (look for '%' in header)
+    const percentColumns = headerRow.reduce((acc, h, idx) => {
+      if (typeof h === 'string' && h.includes('%')) acc.add(idx);
+      return acc;
+    }, new Set());
 
     tbody.innerHTML = dataRows.map(row => {
       const rankName = rankColumnIndex >= 0 ? String(row[rankColumnIndex] || '').trim() : '';
       const rankClass = RANK_CLASS_MAP[rankName] || '';
       const rowClass = rankClass ? ` class="${rankClass}"` : '';
-      return `<tr${rowClass}>` + row.map(cell => `<td>${cell ?? ''}</td>`).join('') + '</tr>';
+      return `<tr${rowClass}>` + row.map((cell, colIdx) => {
+        let display = cell ?? '';
+        // Format percentage columns
+        if (percentColumns.has(colIdx) && typeof cell === 'number') {
+          display = (cell * 100).toFixed(1) + '%';
+        } else if (typeof cell === 'number') {
+          // General number formatting: 2 decimals for floating, integers stay as is
+          if (!Number.isInteger(cell)) {
+            display = parseFloat(cell.toFixed(2));
+          }
+        }
+        return `<td>${display}</td>`;
+      }).join('') + '</tr>';
     }).join('');
   } catch (err) {
     console.error(`Error loading sheet "${sheetName}":`, err);
@@ -98,12 +119,8 @@ async function loadTableFromSheet(sheetName, tableId, rankColumnIndex = 5) {
   }
 }
 
-// ==================== SHEET LIST ====================
+// ==================== SHEET LIST & DROPDOWNS ====================
 
-/**
- * Fetches the names of all available sheets.
- * @returns {Promise<string[]>}
- */
 async function fetchSheetList() {
   const url = `${API_BASE}?list=1`;
   const response = await fetch(url);
@@ -112,7 +129,7 @@ async function fetchSheetList() {
 }
 
 /**
- * Populates a <select> element with sheet names that match a given prefix.
+ * Populate a <select> with sheet names matching a prefix.
  * @param {string} selectId
  * @param {string} prefix - e.g. "LEADERBOARD_" or "MATCH_REPORTS_"
  */
@@ -125,7 +142,7 @@ async function populateMonthSelector(selectId, prefix) {
     const filtered = allSheets
       .filter(name => name.startsWith(prefix))
       .sort()
-      .reverse(); // newest first
+      .reverse();
 
     select.innerHTML = '<option value="">-- Select a month --</option>';
     filtered.forEach(name => {
@@ -141,13 +158,26 @@ async function populateMonthSelector(selectId, prefix) {
   }
 }
 
+/**
+ * Populate any <select> with a list of strings.
+ * @param {string} selectId
+ * @param {string[]} items
+ * @param {string} defaultText
+ */
+function populateSelectFromList(selectId, items, defaultText = '-- Select --') {
+  const select = document.getElementById(selectId);
+  if (!select) return;
+  select.innerHTML = `<option value="">${defaultText}</option>`;
+  items.forEach(item => {
+    const opt = document.createElement('option');
+    opt.value = item;
+    opt.textContent = item;
+    select.appendChild(opt);
+  });
+}
+
 // ==================== PLAIN TEXT RENDERER ====================
 
-/**
- * Loads a sheet and renders its content as plain text (for FAQ etc.)
- * @param {string} sheetName
- * @param {string} containerId - ID of a <div> or <pre>
- */
 async function loadPlainText(sheetName, containerId) {
   const container = document.getElementById(containerId);
   if (!container) return;
@@ -160,7 +190,6 @@ async function loadPlainText(sheetName, containerId) {
       container.textContent = 'No content found.';
       return;
     }
-    // For FAQ, the text is in the first column, with possible merged cells; just join rows
     const lines = allRows.map(row => row[0] || '').filter(line => line.trim() !== '');
     container.innerHTML = lines.map(line => `<p>${line}</p>`).join('');
   } catch (err) {
