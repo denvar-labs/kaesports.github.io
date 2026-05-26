@@ -1,9 +1,8 @@
 // =====================================================
-//  KA ESPORTS – API Data Loader (FIXED v3)
-//  - Correct skipRows for PLAYERS (1)
-//  - Percentage formatting for columns with '%' in header
-//  - Always shows table headers
-//  - Provides fetchPlayerNames() for H2H
+//  KA ESPORTS – API Data Loader (v4 – Match Report colors)
+//  - Detects MATCH_REPORTS_ sheets and colors the Player cell
+//    according to the "Rating Before Match" value.
+//  - Percentage formatting, rank colors, etc.
 // =====================================================
 
 const API_BASE = 'https://script.google.com/macros/s/AKfycbyVBjLSCxunlwsHt2Ou_grlUMUte5Z_J1t5tOICLkVknmMyIwz5HPmQxEO0yJRhuDLY/exec';
@@ -14,7 +13,7 @@ const API_BASE = 'https://script.google.com/macros/s/AKfycbyVBjLSCxunlwsHt2Ou_gr
  */
 const HEADER_ROWS_TO_SKIP = {
   'LEADERBOARD_GLOBAL': 3,
-  'PLAYERS': 1,           // <-- CORREGIDO: solo 1 fila de encabezados, sin título fusionado
+  'PLAYERS': 1,
   'MATCHES': 2,
   'PENALTIES': 2,
   'ANTI_SMURF_LOG': 2,
@@ -38,6 +37,25 @@ const RANK_CLASS_MAP = {
   'Amateur': 'rank-amateur',
   'Padawan': 'rank-padawan'
 };
+
+// Rating thresholds (same as in CONFIG)
+const RATING_THRESHOLDS = [
+  { rank: 'Grand Master', min: 2000 },
+  { rank: 'Master', min: 1800 },
+  { rank: 'Pro', min: 1600 },
+  { rank: 'Expert', min: 1400 },
+  { rank: 'Advanced', min: 1200 },
+  { rank: 'Amateur', min: 1000 },
+  { rank: 'Padawan', min: 0 }
+];
+
+function getRankFromRating(rating) {
+  const r = Number(rating);
+  for (const level of RATING_THRESHOLDS) {
+    if (r >= level.min) return level.rank;
+  }
+  return 'Padawan';
+}
 
 // ==================== CORE FETCH ====================
 
@@ -71,36 +89,48 @@ async function loadTableFromSheet(sheetName, tableId, rankColumnIndex = 5) {
     const allRows = await fetchSheetData(sheetName);
     const skipRows = HEADER_ROWS_TO_SKIP[sheetName] ?? DEFAULT_SKIP;
 
-    // Determine header row
     let headerRow = [];
     if (allRows.length >= skipRows && skipRows > 0) {
       headerRow = allRows[skipRows - 1].map(h => h || '');
     }
 
-    // Build table head (always show if we have headers)
     thead.innerHTML = headerRow.length
       ? '<tr>' + headerRow.map(h => `<th>${h}</th>`).join('') + '</tr>'
       : '';
 
-    // Data rows start after skipRows
     const dataRows = allRows.slice(skipRows);
-
     if (dataRows.length === 0) {
       tbody.innerHTML = '<tr><td colspan="20">No data available.</td></tr>';
       return;
     }
 
-    // Identify columns that contain percentages (look for '%' in header)
+    // Identify percentage columns
     const percentColumns = new Set();
     headerRow.forEach((h, idx) => {
       if (typeof h === 'string' && h.includes('%')) percentColumns.add(idx);
     });
 
+    // Special handling for MATCH_REPORTS_ sheets: color the Player cell by "Rating Before Match"
+    const isMatchReport = sheetName.startsWith('MATCH_REPORTS_');
+    let playerColIndex = -1;
+    let ratingBeforeColIndex = -1;
+    if (isMatchReport) {
+      playerColIndex = headerRow.findIndex(h => h === 'Player');
+      ratingBeforeColIndex = headerRow.findIndex(h => h === 'Rating Before Match');
+      // fallback: sometimes the column might be "Rating Before Matcl" (typo in original data?)
+      if (ratingBeforeColIndex === -1) ratingBeforeColIndex = headerRow.findIndex(h => h === 'Rating Before Matcl');
+    }
+
     tbody.innerHTML = dataRows.map(row => {
-      const rankName = rankColumnIndex >= 0 ? String(row[rankColumnIndex] || '').trim() : '';
-      const rankClass = RANK_CLASS_MAP[rankName] || '';
-      const rowClass = rankClass ? ` class="${rankClass}"` : '';
-      return `<tr${rowClass}>` + row.map((cell, colIdx) => {
+      // Determine rank class for normal sheets (like leaderboards)
+      let rowClass = '';
+      if (!isMatchReport && rankColumnIndex >= 0) {
+        const rankName = String(row[rankColumnIndex] || '').trim();
+        rowClass = RANK_CLASS_MAP[rankName] || '';
+      }
+
+      let rowHTML = `<tr class="${rowClass}">`;
+      row.forEach((cell, colIdx) => {
         let display = cell ?? '';
         // Format percentage columns
         if (percentColumns.has(colIdx) && typeof cell === 'number') {
@@ -110,8 +140,22 @@ async function loadTableFromSheet(sheetName, tableId, rankColumnIndex = 5) {
             display = parseFloat(cell.toFixed(2));
           }
         }
-        return `<td>${display}</td>`;
-      }).join('') + '</tr>';
+
+        // Apply rank color to Player cell in Match Reports
+        let cellStyle = '';
+        if (isMatchReport && colIdx === playerColIndex && ratingBeforeColIndex >= 0) {
+          const ratingBefore = parseFloat(row[ratingBeforeColIndex]);
+          if (!isNaN(ratingBefore)) {
+            const rank = getRankFromRating(ratingBefore);
+            const cssClass = RANK_CLASS_MAP[rank] || '';
+            cellStyle = ` class="${cssClass}"`;
+          }
+        }
+
+        rowHTML += `<td${cellStyle}>${display}</td>`;
+      });
+      rowHTML += '</tr>';
+      return rowHTML;
     }).join('');
   } catch (err) {
     console.error(`Error loading sheet "${sheetName}":`, err);
@@ -128,20 +172,15 @@ async function fetchSheetList() {
   return json.sheets || [];
 }
 
-/**
- * Populate a <select> with sheet names matching a prefix.
- */
 async function populateMonthSelector(selectId, prefix) {
   const select = document.getElementById(selectId);
   if (!select) return;
-
   try {
     const allSheets = await fetchSheetList();
     const filtered = allSheets
       .filter(name => name.startsWith(prefix))
       .sort()
       .reverse();
-
     select.innerHTML = '<option value="">-- Select a month --</option>';
     filtered.forEach(name => {
       const display = name.replace(prefix, '').replace(/_/g, '-');
@@ -156,9 +195,6 @@ async function populateMonthSelector(selectId, prefix) {
   }
 }
 
-/**
- * Populate any <select> with a list of strings.
- */
 function populateSelectFromList(selectId, items, defaultText = '-- Select --') {
   const select = document.getElementById(selectId);
   if (!select) return;
@@ -173,16 +209,11 @@ function populateSelectFromList(selectId, items, defaultText = '-- Select --') {
 
 // ==================== PLAYER NAMES HELPER ====================
 
-/**
- * Fetches the PLAYERS sheet and returns a sorted list of player names.
- * @returns {Promise<string[]>}
- */
 async function fetchPlayerNames() {
   try {
     const playersSheet = await fetchSheetData('PLAYERS');
-    // PLAYERS sheet: header row at index 0, data from index 1
     if (playersSheet.length < 2) return [];
-    const header = playersSheet[0]; // real header
+    const header = playersSheet[0];
     const nameCol = header.indexOf('Name');
     if (nameCol === -1) return [];
     const dataRows = playersSheet.slice(1);
@@ -199,9 +230,7 @@ async function fetchPlayerNames() {
 async function loadPlainText(sheetName, containerId) {
   const container = document.getElementById(containerId);
   if (!container) return;
-
   container.textContent = 'Loading…';
-
   try {
     const allRows = await fetchSheetData(sheetName);
     if (!allRows.length) {
