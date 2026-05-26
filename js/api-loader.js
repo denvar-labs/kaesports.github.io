@@ -1,8 +1,9 @@
 // =====================================================
-//  KA ESPORTS – API Data Loader (Extended v2)
-//  - Percentage formatting
-//  - Always show table headers
-//  - Generic dropdown populator
+//  KA ESPORTS – API Data Loader (FIXED v3)
+//  - Correct skipRows for PLAYERS (1)
+//  - Percentage formatting for columns with '%' in header
+//  - Always shows table headers
+//  - Provides fetchPlayerNames() for H2H
 // =====================================================
 
 const API_BASE = 'https://script.google.com/macros/s/AKfycbyVBjLSCxunlwsHt2Ou_grlUMUte5Z_J1t5tOICLkVknmMyIwz5HPmQxEO0yJRhuDLY/exec';
@@ -13,7 +14,7 @@ const API_BASE = 'https://script.google.com/macros/s/AKfycbyVBjLSCxunlwsHt2Ou_gr
  */
 const HEADER_ROWS_TO_SKIP = {
   'LEADERBOARD_GLOBAL': 3,
-  'PLAYERS': 2,
+  'PLAYERS': 1,           // <-- CORREGIDO: solo 1 fila de encabezados, sin título fusionado
   'MATCHES': 2,
   'PENALTIES': 2,
   'ANTI_SMURF_LOG': 2,
@@ -90,10 +91,10 @@ async function loadTableFromSheet(sheetName, tableId, rankColumnIndex = 5) {
     }
 
     // Identify columns that contain percentages (look for '%' in header)
-    const percentColumns = headerRow.reduce((acc, h, idx) => {
-      if (typeof h === 'string' && h.includes('%')) acc.add(idx);
-      return acc;
-    }, new Set());
+    const percentColumns = new Set();
+    headerRow.forEach((h, idx) => {
+      if (typeof h === 'string' && h.includes('%')) percentColumns.add(idx);
+    });
 
     tbody.innerHTML = dataRows.map(row => {
       const rankName = rankColumnIndex >= 0 ? String(row[rankColumnIndex] || '').trim() : '';
@@ -105,7 +106,6 @@ async function loadTableFromSheet(sheetName, tableId, rankColumnIndex = 5) {
         if (percentColumns.has(colIdx) && typeof cell === 'number') {
           display = (cell * 100).toFixed(1) + '%';
         } else if (typeof cell === 'number') {
-          // General number formatting: 2 decimals for floating, integers stay as is
           if (!Number.isInteger(cell)) {
             display = parseFloat(cell.toFixed(2));
           }
@@ -130,8 +130,6 @@ async function fetchSheetList() {
 
 /**
  * Populate a <select> with sheet names matching a prefix.
- * @param {string} selectId
- * @param {string} prefix - e.g. "LEADERBOARD_" or "MATCH_REPORTS_"
  */
 async function populateMonthSelector(selectId, prefix) {
   const select = document.getElementById(selectId);
@@ -160,9 +158,6 @@ async function populateMonthSelector(selectId, prefix) {
 
 /**
  * Populate any <select> with a list of strings.
- * @param {string} selectId
- * @param {string[]} items
- * @param {string} defaultText
  */
 function populateSelectFromList(selectId, items, defaultText = '-- Select --') {
   const select = document.getElementById(selectId);
@@ -174,6 +169,29 @@ function populateSelectFromList(selectId, items, defaultText = '-- Select --') {
     opt.textContent = item;
     select.appendChild(opt);
   });
+}
+
+// ==================== PLAYER NAMES HELPER ====================
+
+/**
+ * Fetches the PLAYERS sheet and returns a sorted list of player names.
+ * @returns {Promise<string[]>}
+ */
+async function fetchPlayerNames() {
+  try {
+    const playersSheet = await fetchSheetData('PLAYERS');
+    // PLAYERS sheet: header row at index 0, data from index 1
+    if (playersSheet.length < 2) return [];
+    const header = playersSheet[0]; // real header
+    const nameCol = header.indexOf('Name');
+    if (nameCol === -1) return [];
+    const dataRows = playersSheet.slice(1);
+    const names = dataRows.map(row => row[nameCol]).filter(Boolean);
+    return [...new Set(names)].sort();
+  } catch (err) {
+    console.error('Error fetching player names:', err);
+    return [];
+  }
 }
 
 // ==================== PLAIN TEXT RENDERER ====================
