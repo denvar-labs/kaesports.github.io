@@ -48,23 +48,14 @@
   <script>
     // ==================== H2H LOGIC ====================
 
-    // Load player list from PLAYERS sheet into dropdown
+    // Load player list into dropdown
     async function initPlayerDropdown() {
       try {
-        const playersSheet = await fetchSheetData('PLAYERS');
-        // PLAYERS sheet: skip 1 header row? Actually we have a title row and then header row.
-        // We'll use the raw data and find the column with names.
-        // Simplest: load as we do for tables: skip = 2, header row index 1, data from index 2.
-        // We just need the player names column (index 1 after header? Let's check PLAYERS headers:
-        // ID, Name, Country, ... So name is column index 1 (0-based). We'll use that.
-        const skip = 2; // skip title and header
-        if (playersSheet.length <= skip) return;
-        const header = playersSheet[1]; // row index 1 is the real header
-        const nameCol = header.indexOf('Name');
-        if (nameCol === -1) return;
-
-        const dataRows = playersSheet.slice(2);
-        const playerNames = dataRows.map(row => row[nameCol]).filter(Boolean).sort();
+        const playerNames = await fetchPlayerNames();
+        if (playerNames.length === 0) {
+          document.getElementById('player-select').innerHTML = '<option value="">No players found</option>';
+          return;
+        }
         populateSelectFromList('player-select', playerNames, '-- Choose a player --');
       } catch (err) {
         console.error(err);
@@ -78,20 +69,19 @@
       tbody.innerHTML = '<tr><td colspan="7">Loading…</td></tr>';
 
       try {
-        // Load _H2H_DATA sheet
+        // Load _H2H_DATA sheet (skip 1 header row)
         const h2hRows = await fetchSheetData('_H2H_DATA');
-        // Skip header row (skip = 1 for _H2H_DATA)
         const dataRows = h2hRows.slice(1);
 
         // Map player IDs to names using PLAYERS sheet
         const playersSheet = await fetchSheetData('PLAYERS');
         const idToName = {};
         if (playersSheet.length > 1) {
-          const header = playersSheet[1]; // real header
+          const header = playersSheet[0]; // real header (skip 1 row total)
           const idCol = header.indexOf('ID');
           const nameCol = header.indexOf('Name');
           if (idCol !== -1 && nameCol !== -1) {
-            playersSheet.slice(2).forEach(row => {
+            playersSheet.slice(1).forEach(row => {
               if (row[idCol] && row[nameCol]) {
                 idToName[row[idCol]] = row[nameCol];
               }
@@ -99,7 +89,7 @@
           }
         }
 
-        // Find rows where player participates (as player1 or player2)
+        // Find rows where player participates
         const playerRows = dataRows.filter(row => {
           const idA = row[0], idB = row[1];
           return idToName[idA] === playerName || idToName[idB] === playerName;
