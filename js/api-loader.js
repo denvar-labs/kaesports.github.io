@@ -1,5 +1,5 @@
 // =====================================================
-//  KA ESPORTS – API Data Loader (v9 – Flexible header matching)
+//  KA ESPORTS – API Data Loader (v10 – Auto-detect header row)
 // =====================================================
 
 const API_BASE = 'https://script.google.com/macros/s/AKfycbyVBjLSCxunlwsHt2Ou_grlUMUte5Z_J1t5tOICLkVknmMyIwz5HPmQxEO0yJRhuDLY/exec';
@@ -58,6 +58,28 @@ async function fetchSheetData(sheetName) {
   return json.data || [];
 }
 
+// ------------------------------------------------------------------
+//  NUEVA FUNCIÓN: encontrar la fila que contiene los encabezados reales
+// ------------------------------------------------------------------
+function detectHeaderRow(allRows, isMatchReport = false) {
+  // Buscamos la primera fila que contenga "Player" (para match reports)
+  // o simplemente la primera fila no vacía que tenga más de 2 celdas con texto.
+  for (let i = 0; i < Math.min(allRows.length, 10); i++) {
+    const row = allRows[i].map(cell => (cell || '').toString().trim());
+    // Para Match Reports: buscamos la palabra "Player" en cualquier celda
+    if (isMatchReport && row.some(cell => cell.toLowerCase().includes('player'))) {
+      return i;
+    }
+    // Si la fila tiene al menos 3 celdas con contenido, asumimos que es el encabezado
+    const nonEmpty = row.filter(cell => cell.length > 0).length;
+    if (nonEmpty >= 3) {
+      return i;
+    }
+  }
+  // Fallback: si no se encuentra, devolvemos -1 para usar el comportamiento antiguo
+  return -1;
+}
+
 async function loadTableFromSheet(sheetName, tableId, rankColumnIndex = 5) {
   const table = document.getElementById(tableId);
   if (!table) return;
@@ -69,16 +91,29 @@ async function loadTableFromSheet(sheetName, tableId, rankColumnIndex = 5) {
 
   try {
     const allRows = await fetchSheetData(sheetName);
+    if (allRows.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="20">No data available.</td></tr>';
+      return;
+    }
 
-    let skipRows = HEADER_ROWS_TO_SKIP[sheetName];
-    if (skipRows === undefined) {
-      skipRows = sheetName.startsWith('MATCH_REPORTS_') ? 3 : DEFAULT_SKIP;
+    const isMatchReport = sheetName.startsWith('MATCH_REPORTS_');
+
+    // Intentar detectar automáticamente la fila de encabezados
+    const detectedIndex = detectHeaderRow(allRows, isMatchReport);
+    let headerRowIndex = -1;
+    if (detectedIndex >= 0) {
+      headerRowIndex = detectedIndex;
+      console.log(`🔍 Auto-detected header row at index ${detectedIndex}`);
+    } else {
+      // Fallback al número predefinido de filas a saltar
+      const skipRows = HEADER_ROWS_TO_SKIP[sheetName] || (isMatchReport ? 3 : DEFAULT_SKIP);
+      headerRowIndex = skipRows - 1;
+      console.log(`⚠️ Using fallback header row index: ${headerRowIndex}`);
     }
 
     let headerRow = [];
-    if (allRows.length >= skipRows && skipRows > 0) {
-      // Limpiar caracteres invisibles y espacios
-      headerRow = allRows[skipRows - 1].map(h =>
+    if (headerRowIndex >= 0 && allRows.length > headerRowIndex) {
+      headerRow = allRows[headerRowIndex].map(h =>
         (h || '').toString().replace(/[\u200B-\u200D\uFEFF]/g, '').trim()
       );
     }
@@ -87,7 +122,9 @@ async function loadTableFromSheet(sheetName, tableId, rankColumnIndex = 5) {
       ? '<tr>' + headerRow.map(h => `<th>${h}</th>`).join('') + '</tr>'
       : '';
 
-    const dataRows = allRows.slice(skipRows).filter(row => {
+    // Las filas de datos empiezan justo después de la fila de encabezados
+    const dataStartIndex = headerRowIndex + 1;
+    const dataRows = allRows.slice(dataStartIndex).filter(row => {
       const firstCell = (row[0] || '').toString().trim();
       return firstCell !== '---' && firstCell !== '' && firstCell !== 'undefined';
     });
@@ -102,14 +139,10 @@ async function loadTableFromSheet(sheetName, tableId, rankColumnIndex = 5) {
       if (h.includes('%')) percentColumns.add(idx);
     });
 
-    const isMatchReport = sheetName.startsWith('MATCH_REPORTS_');
     let playerColIndex = -1, ratingBeforeColIndex = -1;
-
     if (isMatchReport) {
-      // Buscar de forma flexible (incluye variaciones como "Player " o "Player")
       playerColIndex = headerRow.findIndex(h => h.includes('Player'));
       ratingBeforeColIndex = headerRow.findIndex(h => h.includes('Rating Before'));
-
       console.log('📊 Match Report headers:', headerRow);
       console.log('   Player column index:', playerColIndex, '| Rating Before index:', ratingBeforeColIndex);
     }
@@ -151,7 +184,7 @@ async function loadTableFromSheet(sheetName, tableId, rankColumnIndex = 5) {
   }
 }
 
-// ----- Helper functions -----
+// ----- Helper functions (unchanged) -----
 async function fetchSheetList() {
   const url = `${API_BASE}?list=1`;
   const response = await fetch(url);
