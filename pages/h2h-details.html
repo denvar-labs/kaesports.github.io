@@ -3,33 +3,168 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Player H2H Details – KA ESPORTS</title>
+  <title>Player H2H – KA ESPORTS</title>
   <link rel="stylesheet" href="../css/style.css">
 </head>
 <body>
   <div class="wrap">
     <header class="hero">
       <div class="eyebrow">KA ESPORTS</div>
-      <h1>Player Head-to-Head Details</h1>
-      <p>Complete H2H statistics for all players.</p>
+      <h1>Player Head-to-Head</h1>
+      <p>Select a player to view their match history against others.</p>
     </header>
     <div class="grid">
       <div id="sidebar-container"></div>
       <main class="content">
         <section class="panel">
-          <div class="section-heading">H2H Data</div>
-          <table id="data-table" class="data-table">
-            <thead></thead>
-            <tbody><tr><td colspan="20">Loading…</td></tr></tbody>
+          <div class="section-heading">
+            <label for="player-select">Player:</label>
+            <select id="player-select" style="margin-left:10px; padding:6px 10px; border-radius:4px; border:1px solid var(--border);">
+              <option value="">-- Choose a player --</option>
+            </select>
+          </div>
+          <table id="h2h-table" class="data-table">
+            <thead>
+              <tr>
+                <th>Opponent</th>
+                <th>Matches</th>
+                <th>Wins</th>
+                <th>Losses</th>
+                <th>Ties</th>
+                <th>Win %</th>
+                <th>Avg Race Pts</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td colspan="7">Select a player to see H2H statistics.</td></tr>
+            </tbody>
           </table>
         </section>
       </main>
     </div>
   </div>
+
   <script src="../js/api-loader.js"></script>
   <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      loadTableFromSheet('PLAYER_H2H_DETAILS', 'data-table', -1);
+    // ==================== H2H LOGIC ====================
+
+    // Load player list from PLAYERS sheet into dropdown
+    async function initPlayerDropdown() {
+      try {
+        const playersSheet = await fetchSheetData('PLAYERS');
+        // PLAYERS sheet: skip 1 header row? Actually we have a title row and then header row.
+        // We'll use the raw data and find the column with names.
+        // Simplest: load as we do for tables: skip = 2, header row index 1, data from index 2.
+        // We just need the player names column (index 1 after header? Let's check PLAYERS headers:
+        // ID, Name, Country, ... So name is column index 1 (0-based). We'll use that.
+        const skip = 2; // skip title and header
+        if (playersSheet.length <= skip) return;
+        const header = playersSheet[1]; // row index 1 is the real header
+        const nameCol = header.indexOf('Name');
+        if (nameCol === -1) return;
+
+        const dataRows = playersSheet.slice(2);
+        const playerNames = dataRows.map(row => row[nameCol]).filter(Boolean).sort();
+        populateSelectFromList('player-select', playerNames, '-- Choose a player --');
+      } catch (err) {
+        console.error(err);
+        document.getElementById('player-select').innerHTML = '<option value="">Error loading players</option>';
+      }
+    }
+
+    // Load H2H data for a player
+    async function loadH2HForPlayer(playerName) {
+      const tbody = document.querySelector('#h2h-table tbody');
+      tbody.innerHTML = '<tr><td colspan="7">Loading…</td></tr>';
+
+      try {
+        // Load _H2H_DATA sheet
+        const h2hRows = await fetchSheetData('_H2H_DATA');
+        // Skip header row (skip = 1 for _H2H_DATA)
+        const dataRows = h2hRows.slice(1);
+
+        // Map player IDs to names using PLAYERS sheet
+        const playersSheet = await fetchSheetData('PLAYERS');
+        const idToName = {};
+        if (playersSheet.length > 1) {
+          const header = playersSheet[1]; // real header
+          const idCol = header.indexOf('ID');
+          const nameCol = header.indexOf('Name');
+          if (idCol !== -1 && nameCol !== -1) {
+            playersSheet.slice(2).forEach(row => {
+              if (row[idCol] && row[nameCol]) {
+                idToName[row[idCol]] = row[nameCol];
+              }
+            });
+          }
+        }
+
+        // Find rows where player participates (as player1 or player2)
+        const playerRows = dataRows.filter(row => {
+          const idA = row[0], idB = row[1];
+          return idToName[idA] === playerName || idToName[idB] === playerName;
+        });
+
+        if (playerRows.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="7">No H2H data found for this player.</td></tr>';
+          return;
+        }
+
+        // Build summary per opponent
+        const opponentStats = {};
+        playerRows.forEach(row => {
+          const idA = row[0], idB = row[1], matches = row[2], winsA = row[3], winsB = row[4], ties = row[5], ptsA = row[6], ptsB = row[7];
+          const isPlayerA = idToName[idA] === playerName;
+          const oppId = isPlayerA ? idB : idA;
+          const oppName = idToName[oppId] || oppId;
+          const wins = isPlayerA ? winsA : winsB;
+          const losses = matches - wins - ties;
+          const totalPts = isPlayerA ? ptsA : ptsB;
+
+          if (!opponentStats[oppName]) {
+            opponentStats[oppName] = { matches: 0, wins: 0, losses: 0, ties: 0, totalPts: 0 };
+          }
+          const st = opponentStats[oppName];
+          st.matches += matches;
+          st.wins += wins;
+          st.losses += losses;
+          st.ties += ties;
+          st.totalPts += totalPts;
+        });
+
+        const opponents = Object.entries(opponentStats).sort((a, b) => b[1].matches - a[1].matches);
+
+        tbody.innerHTML = opponents.map(([name, st]) => {
+          const winPercent = st.matches ? ((st.wins / st.matches) * 100).toFixed(1) : '0.0';
+          const avgPts = st.matches ? (st.totalPts / st.matches).toFixed(2) : '0.00';
+          return `<tr>
+            <td>${name}</td>
+            <td>${st.matches}</td>
+            <td>${st.wins}</td>
+            <td>${st.losses}</td>
+            <td>${st.ties}</td>
+            <td>${winPercent}%</td>
+            <td>${avgPts}</td>
+          </tr>`;
+        }).join('');
+      } catch (err) {
+        console.error(err);
+        tbody.innerHTML = `<tr><td colspan="7">Error: ${err.message}</td></tr>`;
+      }
+    }
+
+    // Initialize page
+    document.addEventListener('DOMContentLoaded', async () => {
+      await initPlayerDropdown();
+
+      document.getElementById('player-select').addEventListener('change', (e) => {
+        const name = e.target.value;
+        if (!name) {
+          document.querySelector('#h2h-table tbody').innerHTML = '<tr><td colspan="7">Select a player to see H2H statistics.</td></tr>';
+          return;
+        }
+        loadH2HForPlayer(name);
+      });
     });
   </script>
   <script>
