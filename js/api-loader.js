@@ -58,25 +58,15 @@ async function fetchSheetData(sheetName) {
   return json.data || [];
 }
 
-// ------------------------------------------------------------------
-//  NUEVA FUNCIÓN: encontrar la fila que contiene los encabezados reales
-// ------------------------------------------------------------------
 function detectHeaderRow(allRows, isMatchReport = false) {
-  // Buscamos la primera fila que contenga "Player" (para match reports)
-  // o simplemente la primera fila no vacía que tenga más de 2 celdas con texto.
   for (let i = 0; i < Math.min(allRows.length, 10); i++) {
     const row = allRows[i].map(cell => (cell || '').toString().trim());
-    // Para Match Reports: buscamos la palabra "Player" en cualquier celda
     if (isMatchReport && row.some(cell => cell.toLowerCase().includes('player'))) {
       return i;
     }
-    // Si la fila tiene al menos 3 celdas con contenido, asumimos que es el encabezado
     const nonEmpty = row.filter(cell => cell.length > 0).length;
-    if (nonEmpty >= 3) {
-      return i;
-    }
+    if (nonEmpty >= 3) return i;
   }
-  // Fallback: si no se encuentra, devolvemos -1 para usar el comportamiento antiguo
   return -1;
 }
 
@@ -97,32 +87,16 @@ async function loadTableFromSheet(sheetName, tableId, rankColumnIndex = 5) {
     }
 
     const isMatchReport = sheetName.startsWith('MATCH_REPORTS_');
-
-    // Intentar detectar automáticamente la fila de encabezados
     const detectedIndex = detectHeaderRow(allRows, isMatchReport);
-    let headerRowIndex = -1;
-    if (detectedIndex >= 0) {
-      headerRowIndex = detectedIndex;
-      console.log(`🔍 Auto-detected header row at index ${detectedIndex}`);
-    } else {
-      // Fallback al número predefinido de filas a saltar
-      const skipRows = HEADER_ROWS_TO_SKIP[sheetName] || (isMatchReport ? 3 : DEFAULT_SKIP);
-      headerRowIndex = skipRows - 1;
-      console.log(`⚠️ Using fallback header row index: ${headerRowIndex}`);
-    }
+    let headerRowIndex = detectedIndex >= 0 ? detectedIndex : (HEADER_ROWS_TO_SKIP[sheetName] || (isMatchReport ? 3 : DEFAULT_SKIP)) - 1;
 
     let headerRow = [];
     if (headerRowIndex >= 0 && allRows.length > headerRowIndex) {
-      headerRow = allRows[headerRowIndex].map(h =>
-        (h || '').toString().replace(/[\u200B-\u200D\uFEFF]/g, '').trim()
-      );
+      headerRow = allRows[headerRowIndex].map(h => (h || '').toString().replace(/[\u200B-\u200D\uFEFF]/g, '').trim());
     }
 
-    thead.innerHTML = headerRow.length
-      ? '<tr>' + headerRow.map(h => `<th>${h}</th>`).join('') + '</tr>'
-      : '';
+    thead.innerHTML = headerRow.length ? '<tr>' + headerRow.map(h => `<th>${h}</th>`).join('') + '</tr>' : '';
 
-    // Las filas de datos empiezan justo después de la fila de encabezados
     const dataStartIndex = headerRowIndex + 1;
     const dataRows = allRows.slice(dataStartIndex).filter(row => {
       const firstCell = (row[0] || '').toString().trim();
@@ -135,44 +109,31 @@ async function loadTableFromSheet(sheetName, tableId, rankColumnIndex = 5) {
     }
 
     const percentColumns = new Set();
-    headerRow.forEach((h, idx) => {
-      if (h.includes('%')) percentColumns.add(idx);
-    });
+    headerRow.forEach((h, idx) => { if (h.includes('%')) percentColumns.add(idx); });
 
     let playerColIndex = -1, ratingBeforeColIndex = -1;
     if (isMatchReport) {
       playerColIndex = headerRow.findIndex(h => h.includes('Player'));
       ratingBeforeColIndex = headerRow.findIndex(h => h.includes('Rating Before'));
-      console.log('📊 Match Report headers:', headerRow);
-      console.log('   Player column index:', playerColIndex, '| Rating Before index:', ratingBeforeColIndex);
     }
 
     tbody.innerHTML = dataRows.map(row => {
-      let rowClass = '';
-      if (!isMatchReport && rankColumnIndex >= 0) {
-        const rankName = String(row[rankColumnIndex] || '').trim();
-        rowClass = RANK_CLASS_MAP[rankName] || '';
-      }
+      let rowClass = (!isMatchReport && rankColumnIndex >= 0) ? (RANK_CLASS_MAP[String(row[rankColumnIndex] || '').trim()] || '') : '';
 
       let rowHTML = `<tr class="${rowClass}">`;
       row.forEach((cell, colIdx) => {
         let display = cell ?? '';
-        if (percentColumns.has(colIdx) && typeof cell === 'number') {
-          display = (cell * 100).toFixed(1) + '%';
-        } else if (typeof cell === 'number' && !Number.isInteger(cell)) {
-          display = parseFloat(cell.toFixed(2));
-        }
+        if (percentColumns.has(colIdx) && typeof cell === 'number') display = (cell * 100).toFixed(1) + '%';
+        else if (typeof cell === 'number' && !Number.isInteger(cell)) display = parseFloat(cell.toFixed(2));
 
         let cellStyle = '';
         if (isMatchReport && colIdx === playerColIndex && ratingBeforeColIndex >= 0) {
           const ratingBefore = parseFloat(row[ratingBeforeColIndex]);
           if (!isNaN(ratingBefore)) {
             const rank = getRankFromRating(ratingBefore);
-            const cssClass = RANK_CLASS_MAP[rank] || '';
-            cellStyle = ` class="${cssClass}"`;
+            cellStyle = ` class="${RANK_CLASS_MAP[rank] || ''}"`;
           }
         }
-
         rowHTML += `<td${cellStyle}>${display}</td>`;
       });
       rowHTML += '</tr>';
@@ -184,7 +145,6 @@ async function loadTableFromSheet(sheetName, tableId, rankColumnIndex = 5) {
   }
 }
 
-// ----- Helper functions (unchanged) -----
 async function fetchSheetList() {
   const url = `${API_BASE}?list=1`;
   const response = await fetch(url);
@@ -200,27 +160,19 @@ async function populateMonthSelector(selectId, prefix) {
     const filtered = allSheets.filter(name => name.startsWith(prefix)).sort().reverse();
     select.innerHTML = '<option value="">-- Select a month --</option>';
     filtered.forEach(name => {
-      const display = name.replace(prefix, '').replace(/_/g, '-');
       const option = document.createElement('option');
       option.value = name;
-      option.textContent = display;
+      option.textContent = name.replace(prefix, '').replace(/_/g, '-');
       select.appendChild(option);
     });
-  } catch (err) {
-    console.error('Error populating month selector:', err);
-  }
+  } catch (err) { console.error('Error populating month selector:', err); }
 }
 
 function populateSelectFromList(selectId, items, defaultText = '-- Select --') {
   const select = document.getElementById(selectId);
   if (!select) return;
   select.innerHTML = `<option value="">${defaultText}</option>`;
-  items.forEach(item => {
-    const opt = document.createElement('option');
-    opt.value = item;
-    opt.textContent = item;
-    select.appendChild(opt);
-  });
+  items.forEach(item => { const opt = document.createElement('option'); opt.value = item; opt.textContent = item; select.appendChild(opt); });
 }
 
 async function fetchPlayerNames() {
@@ -230,12 +182,8 @@ async function fetchPlayerNames() {
     const header = playersSheet[0].map(h => (h || '').toString().replace(/[\u200B-\u200D\uFEFF]/g, '').trim());
     const nameCol = header.indexOf('Name');
     if (nameCol === -1) return [];
-    const names = playersSheet.slice(1).map(row => row[nameCol]).filter(Boolean);
-    return [...new Set(names)].sort();
-  } catch (err) {
-    console.error('Error fetching player names:', err);
-    return [];
-  }
+    return [...new Set(playersSheet.slice(1).map(row => row[nameCol]).filter(Boolean))].sort();
+  } catch (err) { return []; }
 }
 
 async function loadPlainText(sheetName, containerId) {
@@ -247,7 +195,5 @@ async function loadPlainText(sheetName, containerId) {
     if (!allRows.length) { container.textContent = 'No content found.'; return; }
     const lines = allRows.map(row => row[0] || '').filter(line => line.trim() !== '');
     container.innerHTML = lines.map(line => `<p>${line}</p>`).join('');
-  } catch (err) {
-    container.textContent = `Error: ${err.message}`;
-  }
+  } catch (err) { container.textContent = `Error: ${err.message}`; }
 }
