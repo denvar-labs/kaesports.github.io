@@ -1,4 +1,4 @@
-/* ===== KA ESPORTS – Google Sheets Inspired Light Theme (optimizado para pantallas grandes) ===== */
+/* ===== KA ESPORTS – Google Sheets Inspired Light Theme (adaptable) ===== */
 
 :root {
   --bg: #f5f7fa;
@@ -17,7 +17,7 @@
   --rank-advanced: #FFF38A;
   --rank-amateur: #9AFF7D;
   --rank-padawan: #C7C1C1;
-  --max-width: 1600px;   /* ← antes 1200px */
+  --max-width: 1600px;
   --radius: 8px;
   --shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
 }
@@ -40,7 +40,7 @@ a:hover { color: var(--accent-dark); text-decoration: underline; }
   max-width: var(--max-width);
   margin: 0 auto;
   padding: 20px 16px 40px;
-  width: 100%;             /* ← para que ocupe todo el ancho disponible */
+  width: 100%;
 }
 
 /* ===== Header ===== */
@@ -141,14 +141,14 @@ h1 {
   color: var(--text);
 }
 
-/* ===== Contenedor para tablas anchas (scroll horizontal) ===== */
+/* ===== Contenedor para scroll horizontal ===== */
 .table-responsive {
   width: 100%;
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
 }
 
-/* ===== Data Table (cabeceras azules como en FAQ) ===== */
+/* ===== Data Table ===== */
 .data-table {
   width: 100%;
   border-collapse: collapse;
@@ -156,7 +156,7 @@ h1 {
   border-radius: var(--radius);
   overflow: hidden;
   border: 1px solid var(--border);
-  min-width: 1100px;        /* ← evita que se comprima en exceso */
+  min-width: 1100px;
 }
 
 .data-table th {
@@ -169,7 +169,7 @@ h1 {
   padding: 12px 16px;
   text-align: left;
   border-bottom: 2px solid var(--accent-dark);
-  white-space: nowrap;       /* ← evita que los títulos se partan */
+  white-space: nowrap;
 }
 
 .data-table td {
@@ -181,12 +181,11 @@ h1 {
 
 .data-table tr:last-child td { border-bottom: none; }
 
-/* Hover genérico: solo celdas que NO tengan clase de rango */
 .data-table tbody tr:hover td:not([class*="rank-"]) {
   background-color: #f0f4ff;
 }
 
-/* ===== Leaderboard: filas completas con color de rango ===== */
+/* ===== Leaderboard: filas con color de rango ===== */
 tr.rank-grand-master td { background-color: var(--rank-gm); }
 tr.rank-master td       { background-color: var(--rank-master); }
 tr.rank-pro td          { background-color: var(--rank-pro); }
@@ -195,7 +194,6 @@ tr.rank-advanced td     { background-color: var(--rank-advanced); }
 tr.rank-amateur td      { background-color: var(--rank-amateur); }
 tr.rank-padawan td      { background-color: var(--rank-padawan); }
 
-/* Borde izquierdo para leaderboards */
 tr.rank-grand-master td:first-child { border-left: 3px solid #d4a017; }
 tr.rank-master td:first-child       { border-left: 3px solid #e6a800; }
 tr.rank-pro td:first-child          { border-left: 3px solid #5b9bd5; }
@@ -204,7 +202,7 @@ tr.rank-advanced td:first-child     { border-left: 3px solid #e6d740; }
 tr.rank-amateur td:first-child      { border-left: 3px solid #5fbf5f; }
 tr.rank-padawan td:first-child      { border-left: 3px solid #9b9b9b; }
 
-/* ===== Match Reports: celdas individuales con color de rango ===== */
+/* ===== Match Reports: celdas individuales ===== */
 td.rank-grand-master { background-color: #f1c232; }
 td.rank-master       { background-color: #FFD966; }
 td.rank-pro          { background-color: #CCE5FF; }
