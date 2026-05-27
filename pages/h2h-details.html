@@ -23,32 +23,21 @@
               <option value="">-- Choose a player --</option>
             </select>
           </div>
-          <table id="h2h-table" class="data-table">
-            <thead>
-              <tr>
-                <th>Opponent</th>
-                <th>Matches</th>
-                <th>Wins</th>
-                <th>Losses</th>
-                <th>Ties</th>
-                <th>Win %</th>
-                <th>Avg Race Pts</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr><td colspan="7">Select a player to see H2H statistics.</td></tr>
-            </tbody>
-          </table>
+          <div class="table-responsive">
+            <table id="h2h-table" class="data-table">
+              <thead>
+                <tr><th>Opponent</th><th>Matches</th><th>Wins</th><th>Losses</th><th>Ties</th><th>Win %</th><th>Avg Race Pts</th></tr>
+              </thead>
+              <tbody><tr><td colspan="7">Select a player to see H2H statistics.</td></tr></tbody>
+            </table>
+          </div>
         </section>
       </main>
     </div>
   </div>
-
   <script src="../js/api-loader.js"></script>
   <script>
-    // ==================== H2H LOGIC ====================
-
-    // Load player list into dropdown
+    // (El script de H2H se mantiene igual que antes)
     async function initPlayerDropdown() {
       try {
         const playerNames = await fetchPlayerNames();
@@ -57,51 +46,29 @@
           return;
         }
         populateSelectFromList('player-select', playerNames, '-- Choose a player --');
-      } catch (err) {
-        console.error(err);
-        document.getElementById('player-select').innerHTML = '<option value="">Error loading players</option>';
-      }
+      } catch (err) { console.error(err); }
     }
 
-    // Load H2H data for a player
     async function loadH2HForPlayer(playerName) {
       const tbody = document.querySelector('#h2h-table tbody');
       tbody.innerHTML = '<tr><td colspan="7">Loading…</td></tr>';
-
       try {
-        // Load _H2H_DATA sheet (skip 1 header row)
         const h2hRows = await fetchSheetData('_H2H_DATA');
         const dataRows = h2hRows.slice(1);
-
-        // Map player IDs to names using PLAYERS sheet
         const playersSheet = await fetchSheetData('PLAYERS');
         const idToName = {};
         if (playersSheet.length > 1) {
-          const header = playersSheet[0]; // real header (skip 1 row total)
+          const header = playersSheet[0].map(h => (h || '').toString().trim());
           const idCol = header.indexOf('ID');
           const nameCol = header.indexOf('Name');
           if (idCol !== -1 && nameCol !== -1) {
-            playersSheet.slice(1).forEach(row => {
-              if (row[idCol] && row[nameCol]) {
-                idToName[row[idCol]] = row[nameCol];
-              }
-            });
+            playersSheet.slice(1).forEach(row => { if (row[idCol] && row[nameCol]) idToName[row[idCol]] = row[nameCol]; });
           }
         }
+        const playerRows = dataRows.filter(row => idToName[row[0]] === playerName || idToName[row[1]] === playerName);
+        if (playerRows.length === 0) { tbody.innerHTML = '<tr><td colspan="7">No H2H data found.</td></tr>'; return; }
 
-        // Find rows where player participates
-        const playerRows = dataRows.filter(row => {
-          const idA = row[0], idB = row[1];
-          return idToName[idA] === playerName || idToName[idB] === playerName;
-        });
-
-        if (playerRows.length === 0) {
-          tbody.innerHTML = '<tr><td colspan="7">No H2H data found for this player.</td></tr>';
-          return;
-        }
-
-        // Build summary per opponent
-        const opponentStats = {};
+        const oppStats = {};
         playerRows.forEach(row => {
           const idA = row[0], idB = row[1], matches = row[2], winsA = row[3], winsB = row[4], ties = row[5], ptsA = row[6], ptsB = row[7];
           const isPlayerA = idToName[idA] === playerName;
@@ -110,50 +77,24 @@
           const wins = isPlayerA ? winsA : winsB;
           const losses = matches - wins - ties;
           const totalPts = isPlayerA ? ptsA : ptsB;
-
-          if (!opponentStats[oppName]) {
-            opponentStats[oppName] = { matches: 0, wins: 0, losses: 0, ties: 0, totalPts: 0 };
-          }
-          const st = opponentStats[oppName];
-          st.matches += matches;
-          st.wins += wins;
-          st.losses += losses;
-          st.ties += ties;
-          st.totalPts += totalPts;
+          if (!oppStats[oppName]) oppStats[oppName] = { matches: 0, wins: 0, losses: 0, ties: 0, totalPts: 0 };
+          const st = oppStats[oppName];
+          st.matches += matches; st.wins += wins; st.losses += losses; st.ties += ties; st.totalPts += totalPts;
         });
-
-        const opponents = Object.entries(opponentStats).sort((a, b) => b[1].matches - a[1].matches);
-
+        const opponents = Object.entries(oppStats).sort((a, b) => b[1].matches - a[1].matches);
         tbody.innerHTML = opponents.map(([name, st]) => {
           const winPercent = st.matches ? ((st.wins / st.matches) * 100).toFixed(1) : '0.0';
           const avgPts = st.matches ? (st.totalPts / st.matches).toFixed(2) : '0.00';
-          return `<tr>
-            <td>${name}</td>
-            <td>${st.matches}</td>
-            <td>${st.wins}</td>
-            <td>${st.losses}</td>
-            <td>${st.ties}</td>
-            <td>${winPercent}%</td>
-            <td>${avgPts}</td>
-          </tr>`;
+          return `<tr><td>${name}</td><td>${st.matches}</td><td>${st.wins}</td><td>${st.losses}</td><td>${st.ties}</td><td>${winPercent}%</td><td>${avgPts}</td></tr>`;
         }).join('');
-      } catch (err) {
-        console.error(err);
-        tbody.innerHTML = `<tr><td colspan="7">Error: ${err.message}</td></tr>`;
-      }
+      } catch (err) { tbody.innerHTML = `<tr><td colspan="7">Error: ${err.message}</td></tr>`; }
     }
 
-    // Initialize page
     document.addEventListener('DOMContentLoaded', async () => {
       await initPlayerDropdown();
-
-      document.getElementById('player-select').addEventListener('change', (e) => {
-        const name = e.target.value;
-        if (!name) {
-          document.querySelector('#h2h-table tbody').innerHTML = '<tr><td colspan="7">Select a player to see H2H statistics.</td></tr>';
-          return;
-        }
-        loadH2HForPlayer(name);
+      document.getElementById('player-select').addEventListener('change', e => {
+        if (e.target.value) loadH2HForPlayer(e.target.value);
+        else document.querySelector('#h2h-table tbody').innerHTML = '<tr><td colspan="7">Select a player to see H2H statistics.</td></tr>';
       });
     });
   </script>
