@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KA ESPORTS – Mario Kart 64 Hub</title>
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+  <div class="wrap">
+    <header class="hero">
+      <div class="eyebrow">KA ESPORTS</div>
+      <h1>KA ESPORTS</h1>
+      <p>Your central access to all Mario Kart 64 competitive data.</p>
+    </header>
+
+    <div class="grid">
+      <div id="sidebar-container"></div>
+
+      <main class="content">
+        <section class="panel">
+          <div class="section-heading">📊 Data Views</div>
+          <div class="quick-links">
+            <a href="global-leaderboard.html">🌍 Global Leaderboard</a>
+            <a href="monthly-leaderboard.html">📆 Monthly Leaderboard</a>
+            <a href="match-reports.html">📋 Match Reports</a>
+            <a href="seasons-report.html">📊 Seasons Report</a>
+            <a href="h2h-details.html">🤼 Player H2H Details</a>
+            <a href="players.html">👥 Players</a>
+            <a href="matches.html">🎮 Matches</a>
+            <a href="penalties.html">⚠️ Penalties</a>
+            <a href="faq.html">📘 FAQ</a>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="section-heading">🔗 Community</div>
+          <div class="quick-links">
+            <a href="https://discord.gg/4QpvzysKv" target="_blank" rel="noopener">💬 Discord</a>
+            <a href="https://www.twitch.tv/devarsc" target="_blank" rel="noopener">📺 Twitch – devarsc</a>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+  <script>
+    fetch("../sidebar.html")
+      .then(r => r.text())
+      .then(html => { document.getElementById("sidebar-container").innerHTML = html; });
+  </script>
+</body>
+</html>
