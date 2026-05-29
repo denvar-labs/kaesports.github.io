@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Community – KA ESPORTS</title>
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+  <div class="wrap">
+    <header class="hero">
+      <div class="eyebrow">KA ESPORTS</div>
+      <h1>Community</h1>
+      <p>Join the conversation and stay connected.</p>
+    </header>
+    <div class="grid">
+      <div id="sidebar-container"></div>
+      <main class="content">
+        <section class="panel">
+          <div class="section-heading">Join Us</div>
+          <div class="quick-links">
+            <a href="https://discord.gg/4QpvzysKv" target="_blank" rel="noopener">
+              <strong>💬 Discord</strong><br>
+              <small>Join the KA ESPORTS community server.</small>
+            </a>
+            <a href="https://www.twitch.tv/devarsc" target="_blank" rel="noopener">
+              <strong>📺 Twitch – devarsc</strong><br>
+              <small>Watch live streams and tournaments.</small>
+            </a>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+  <script>
+    fetch("../sidebar.html").then(r => r.text()).then(html => {
+      document.getElementById("sidebar-container").innerHTML = html;
+    });
+  </script>
+</body>
+</html>
